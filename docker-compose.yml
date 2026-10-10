@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  pr-reviewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pr-reviewer-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-}
+      - MOCK_MODE=${MOCK_MODE:-false}
+    volumes:
+      - .:/app
+    restart: unless-stopped

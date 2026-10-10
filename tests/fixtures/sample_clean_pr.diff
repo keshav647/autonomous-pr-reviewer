@@ -1,0 +1,10 @@
+diff --git a/app/utils/math.py b/app/utils/math.py
+index 9988776..1122334 100644
+--- a/app/utils/math.py
++++ b/app/utils/math.py
+@@ -1,5 +1,8 @@
+-def add(a, b):
+-    return a + b
++def calculate_total(subtotal: float, tax_rate: float = 0.05) -> float:
++    """Calculates total with parameterized tax."""
++    return round(subtotal * (1.0 + tax_rate), 2)

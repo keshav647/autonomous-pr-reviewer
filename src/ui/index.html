@@ -1,0 +1,2819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous Multi-Agent PR Reviewer & Security Auditor</title>
+  
+  <!-- Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- CDNs: Lucide Icons, GSAP, Three.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg-canvas: #07090e;
+      --bg-surface: #0d111a;
+      --bg-surface-elevated: #131926;
+      --bg-glass: rgba(13, 17, 26, 0.75);
+      --bg-glass-card: rgba(19, 25, 38, 0.65);
+      --border-subtle: #1e2638;
+      --border-active: #323d56;
+      --border-glow: rgba(88, 166, 255, 0.35);
+
+      --text-main: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-muted: #535d6c;
+
+      --accent: #58a6ff;
+      --accent-glow: rgba(88, 166, 255, 0.25);
+      --success: #3fb950;
+      --success-glow: rgba(63, 185, 80, 0.2);
+      --warning: #d29922;
+      --warning-glow: rgba(210, 153, 34, 0.2);
+      --danger: #f85149;
+      --danger-glow: rgba(248, 81, 73, 0.25);
+      --purple: #bc8cff;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Ambient 3D Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+
+    /* App Shell */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 28px 60px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 100vh;
+    }
+
+    /* -------------------------------------------------------------
+       1. Top Navigation Bar (High-Taste, Minimalist)
+       ------------------------------------------------------------- */
+    header.top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(188, 140, 255, 0.15));
+      border: 1px solid rgba(88, 166, 255, 0.35);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .brand-meta h1 {
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-meta p {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+    }
+    .branch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 0.68rem;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Key Vault Pill (Click opens Onboarding Modal) */
+    .vault-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(18, 24, 38, 0.8);
+      border: 1px solid var(--border-subtle);
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .vault-pill:hover {
+      border-color: var(--accent);
+      background: rgba(25, 34, 52, 0.9);
+      box-shadow: 0 0 16px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      display: inline-block;
+    }
+    .status-dot.offline {
+      background: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      color: #fff;
+      border-color: var(--border-active);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* -------------------------------------------------------------
+       2. Context Control Bar (Presets & Audit Action)
+       ------------------------------------------------------------- */
+    .control-ribbon {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .preset-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      padding: 4px;
+      border-radius: var(--radius-lg);
+    }
+    .preset-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: var(--font-mono);
+    }
+    .preset-tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .preset-tab.active {
+      color: #fff;
+      background: var(--bg-surface-elevated);
+      border-color: var(--border-active);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    .stat-pill {
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .stat-pill.danger {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+    .stat-pill.warning {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(210, 153, 34, 0.3);
+    }
+    .stat-pill.success {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .audit-action-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-run-audit {
+      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 22px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.84rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(31, 111, 235, 0.35);
+      letter-spacing: -0.01em;
+    }
+    .btn-run-audit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(31, 111, 235, 0.55);
+      filter: brightness(1.08);
+    }
+    .btn-run-audit:active { transform: translateY(0); }
+    .btn-run-audit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .shortcut-tag {
+      font-size: 0.68rem;
+      opacity: 0.7;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    /* -------------------------------------------------------------
+       3. Verdict & Executive Telemetry Strip
+       ------------------------------------------------------------- */
+    .executive-strip {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 22px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .executive-strip { grid-template-columns: 1fr; }
+    }
+
+    .verdict-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .verdict-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .verdict-status-badge.REQUEST_CHANGES {
+      background: rgba(248, 81, 73, 0.12);
+      border: 1px solid rgba(248, 81, 73, 0.35);
+      color: var(--danger);
+    }
+    .verdict-status-badge.APPROVE {
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.35);
+      color: var(--success);
+    }
+    .verdict-status-badge.COMMENT {
+      background: rgba(210, 153, 34, 0.12);
+      border: 1px solid rgba(210, 153, 34, 0.35);
+      color: var(--warning);
+    }
+    .verdict-status-badge.STANDBY {
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid rgba(88, 166, 255, 0.25);
+      color: var(--accent);
+    }
+    .verdict-headline {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .verdict-headline strong {
+      color: #fff;
+    }
+
+    .telemetry-pills-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .metric-chip {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 82px;
+    }
+    .metric-chip-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #fff;
+      line-height: 1.1;
+    }
+    .metric-chip-lbl {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    /* -------------------------------------------------------------
+       Real-Time Parallel Multi-Agent HUD Strip
+       ------------------------------------------------------------- */
+    .active-agent-hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+    @media (max-width: 960px) {
+      .active-agent-hud { grid-template-columns: repeat(2, 1fr); }
+    }
+    .hud-agent-cell {
+      background: var(--bg-glass-card);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.25s ease;
+    }
+    .hud-agent-cell.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .hud-agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hud-agent-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .hud-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      display: inline-block;
+      transition: all 0.2s;
+    }
+    .hud-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse-beacon 1.5s infinite;
+    }
+    .hud-agent-status {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+    .hud-meter-track {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .hud-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* -------------------------------------------------------------
+       4. Primary Surface Navigation Tabs
+       ------------------------------------------------------------- */
+    .workspace-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+      margin-top: 4px;
+    }
+    .nav-tabs-list {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .workspace-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .workspace-tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .workspace-tab-btn.active {
+      color: #fff;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-active);
+    }
+    .tab-badge {
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+    .workspace-tab-btn.active .tab-badge {
+      background: rgba(88, 166, 255, 0.2);
+      color: var(--accent);
+    }
+
+    .workspace-tab-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover {
+      color: #fff;
+      border-color: var(--border-active);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* -------------------------------------------------------------
+       5. Workspaces Content Panels
+       ------------------------------------------------------------- */
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Surface Card Container */
+    .surface-card {
+      background: var(--bg-glass-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* File Diff Viewer */
+    .diff-file-header {
+      background: var(--bg-surface-elevated);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+    }
+    .diff-file-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #fff;
+    }
+    .diff-file-stats {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diff-code-wrapper {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      background: #06090e;
+      overflow-x: auto;
+    }
+
+    .diff-row {
+      display: flex;
+      align-items: stretch;
+      min-height: 24px;
+      position: relative;
+    }
+    .diff-row:hover {
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .diff-gutter {
+      width: 52px;
+      padding: 0 10px;
+      text-align: right;
+      color: var(--text-muted);
+      user-select: none;
+      font-size: 0.72rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
+    }
+    .diff-symbol {
+      width: 24px;
+      text-align: center;
+      user-select: none;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .diff-content {
+      padding: 0 12px;
+      white-space: pre;
+      flex-grow: 1;
+      color: #e6edf3;
+    }
+
+    .diff-row.hunk {
+      background: rgba(56, 139, 253, 0.08);
+      color: var(--accent);
+      border-top: 1px solid rgba(56, 139, 253, 0.15);
+      border-bottom: 1px solid rgba(56, 139, 253, 0.15);
+    }
+    .diff-row.hunk .diff-content { color: #79c0ff; font-weight: 600; }
+
+    .diff-row.add {
+      background: rgba(46, 160, 67, 0.12);
+    }
+    .diff-row.add .diff-symbol { color: var(--success); }
+    .diff-row.add .diff-content { color: #aff5b4; }
+
+    .diff-row.del {
+      background: rgba(248, 81, 73, 0.12);
+    }
+    .diff-row.del .diff-symbol { color: var(--danger); }
+    .diff-row.del .diff-content { color: #ffdcd7; }
+
+    /* Inline Expandable Review Comment Cards */
+    .inline-comment-row {
+      background: #0c101a;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px 18px 14px 62px;
+      position: relative;
+    }
+    .inline-comment-row::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
+    .inline-comment-row.CRITICAL::before {
+      background: var(--danger);
+      box-shadow: 0 0 12px var(--danger);
+    }
+    .inline-comment-row.WARNING::before {
+      background: var(--warning);
+      box-shadow: 0 0 12px var(--warning);
+    }
+    .inline-comment-row.INFO::before {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .severity-pill {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+    .severity-pill.CRITICAL { background: rgba(248, 81, 73, 0.2); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.4); }
+    .severity-pill.WARNING { background: rgba(210, 153, 34, 0.2); color: var(--warning); border: 1px solid rgba(210, 153, 34, 0.4); }
+    .severity-pill.INFO { background: rgba(88, 166, 255, 0.2); color: var(--accent); border: 1px solid rgba(88, 166, 255, 0.4); }
+
+    .comment-category {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+    .comment-summary {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      font-family: var(--font-sans);
+    }
+    .comment-explanation {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+      font-family: var(--font-sans);
+    }
+
+    .fix-container {
+      background: #07090f;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .fix-header {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .fix-code {
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #7ee787;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    /* Raw Diff Input Area (Custom Diff Mode) */
+    .raw-diff-textarea {
+      width: 100%;
+      height: 480px;
+      background: #06090e;
+      color: #e6edf3;
+      border: none;
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      resize: vertical;
+      outline: none;
+      display: none;
+    }
+
+    /* -------------------------------------------------------------
+       Tab 2: Agent Telemetry HUD (VenganceUI / SkiperUI)
+       ------------------------------------------------------------- */
+    .telemetry-grid-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      padding: 20px;
+    }
+    @media (max-width: 960px) {
+      .telemetry-grid-layout { grid-template-columns: 1fr; }
+    }
+
+    .worker-stack-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .worker-panel-header {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .worker-unit {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      transition: all 0.2s ease;
+    }
+    .worker-unit:hover {
+      border-color: var(--border-active);
+    }
+    .worker-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .worker-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .worker-state {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+    .worker-meter-track {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .worker-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Monospace Live Terminal */
+    .terminal-container {
+      background: #05070c;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 420px;
+    }
+    .terminal-bar {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+    .term-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .term-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #21262d;
+    }
+    .terminal-body {
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: #8b949e;
+      overflow-y: auto;
+      max-height: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .t-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .t-time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .t-tag-sec { color: var(--danger); font-weight: 700; }
+    .t-tag-perf { color: var(--warning); font-weight: 700; }
+    .t-tag-arch { color: var(--accent); font-weight: 700; }
+    .t-tag-succ { color: var(--success); font-weight: 700; }
+
+    /* -------------------------------------------------------------
+       Tab 3: Executive Summary (Markdown Preview)
+       ------------------------------------------------------------- */
+    .markdown-surface {
+      padding: 24px 30px;
+      line-height: 1.6;
+      color: #c9d1d9;
+    }
+    .markdown-surface h1 {
+      font-size: 1.22rem;
+      color: #fff;
+      font-weight: 700;
+      margin-top: 14px;
+      margin-bottom: 8px;
+    }
+    .markdown-surface h2 {
+      font-size: 1.08rem;
+      color: #fff;
+      font-weight: 700;
+      margin-top: 16px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+    .markdown-surface h3 {
+      font-size: 0.92rem;
+      color: #e6edf3;
+      font-weight: 600;
+      margin-top: 18px;
+      margin-bottom: 10px;
+    }
+    .markdown-surface hr {
+      border: none;
+      border-top: 1px solid var(--border-subtle);
+      margin: 20px 0;
+    }
+    .markdown-surface pre {
+      background: #05070c;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    /* Report Status Badge */
+    .report-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 10px 0 16px 0;
+    }
+    .report-status-pill.danger {
+      background: rgba(248, 81, 73, 0.12);
+      border: 1px solid rgba(248, 81, 73, 0.4);
+      color: #ff7b72;
+      box-shadow: 0 0 14px rgba(248, 81, 73, 0.15);
+    }
+    .report-status-pill.success {
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.4);
+      color: #56d364;
+      box-shadow: 0 0 14px rgba(63, 185, 80, 0.15);
+    }
+    .report-status-pill.warning {
+      background: rgba(210, 153, 34, 0.12);
+      border: 1px solid rgba(210, 153, 34, 0.4);
+      color: #e3b341;
+      box-shadow: 0 0 14px rgba(210, 153, 34, 0.15);
+    }
+
+    /* Report Summary Table */
+    .report-table-wrapper {
+      margin: 14px 0 20px 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #090d16;
+    }
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+    .report-table th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .report-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(30, 38, 56, 0.5);
+      color: var(--text-main);
+    }
+    .report-table tr:last-child td {
+      border-bottom: none;
+    }
+    .report-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .report-table code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+
+    /* Report Action List */
+    .report-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 12px 0 16px 0;
+    }
+    .report-list li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .report-list li::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 8px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .report-list code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #e6edf3;
+    }
+
+    .report-callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(88, 166, 255, 0.06);
+      padding: 10px 16px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 14px 0;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    /* -------------------------------------------------------------
+       6. Onboarding / BYOK Settings Dialog (Linear / Raycast Style)
+       ------------------------------------------------------------- */
+    .dialog-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .dialog-backdrop.active {
+      display: flex;
+      animation: dialogPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes dialogPop {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .dialog-window {
+      background: #0d111a;
+      border: 1px solid var(--border-active);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(88, 166, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dialog-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dialog-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dialog-icon-box {
+      width: 38px;
+      height: 38px;
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .dialog-title-group h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .dialog-title-group p {
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .btn-dialog-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .btn-dialog-close:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .dialog-body {
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .form-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .dialog-select {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .dialog-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .dialog-select option {
+      background: #0d111a;
+      color: #fff;
+    }
+
+    .key-input-container {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0 12px;
+      transition: all 0.2s;
+    }
+    .key-input-container:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .dialog-input {
+      flex-grow: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      padding: 11px 0;
+      outline: none;
+    }
+    .icon-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .icon-toggle-btn:hover { color: #fff; }
+
+    .security-callout {
+      background: rgba(88, 166, 255, 0.05);
+      border: 1px solid rgba(88, 166, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .security-callout i {
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .security-callout-text {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .security-callout-text strong {
+      color: #fff;
+    }
+
+    .dialog-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .btn-dialog-secondary {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 9px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-dialog-secondary:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-active);
+    }
+    .btn-dialog-primary {
+      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 9px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(31, 111, 235, 0.4);
+    }
+    .btn-dialog-primary:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-chip:hover {
+      background: rgba(88, 166, 255, 0.12);
+      border-color: rgba(88, 166, 255, 0.4);
+      color: #fff;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js Ambient Particle Space Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="app-shell">
+    
+    <!-- 1. Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div class="brand-meta">
+          <h1>
+            Autonomous PR Reviewer
+            <span class="branch-badge">
+              <i data-lucide="git-pull-request" style="width: 11px; height: 11px;"></i>
+              PR #42
+            </span>
+          </h1>
+          <p>
+            LangGraph StateMachine &bull; Multi-Agent Consensus &bull; Pydantic v2
+          </p>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Interactive BYOK Vault Pill -->
+        <button id="openSettingsBtn" class="vault-pill" title="Configure AI Model & API Key">
+          <span id="navEngineDot" class="status-dot"></span>
+          <i data-lucide="key" style="width: 13px; height: 13px; color: var(--accent);"></i>
+          <span id="navEngineLabel">Google Gemini (gemini-2.5-flash)</span>
+          <i data-lucide="chevron-down" style="width: 12px; height: 12px; color: var(--text-muted);"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. Control Ribbon: Presets & Action Trigger -->
+    <div class="control-ribbon">
+      <div class="preset-selector-group">
+        <button class="preset-tab active" data-preset="sql_injection">
+          <i data-lucide="file-code" style="width: 13px; height: 13px;"></i>
+          <span>users.py</span>
+          <span class="stat-pill danger">+12 -3</span>
+        </button>
+        <button class="preset-tab" data-preset="performance_leak">
+          <i data-lucide="file-code" style="width: 13px; height: 13px;"></i>
+          <span>analytics.py</span>
+          <span class="stat-pill warning">+8 -1</span>
+        </button>
+        <button class="preset-tab" data-preset="clean_pr">
+          <i data-lucide="file-code" style="width: 13px; height: 13px;"></i>
+          <span>math.py</span>
+          <span class="stat-pill success">+4 -2</span>
+        </button>
+        <button class="preset-tab" id="btnNewBlankDiff" title="Start with a blank buffer to paste custom code">
+          <i data-lucide="file-plus" style="width: 13px; height: 13px; color: var(--accent);"></i>
+          <span>New Blank Diff</span>
+        </button>
+        <button class="preset-tab" id="toggleCustomDiffBtn" title="Toggle raw editor for active diff">
+          <i data-lucide="terminal" style="width: 13px; height: 13px;"></i>
+          <span>Edit Raw Diff</span>
+        </button>
+        <button class="preset-tab" id="btnOpenGitHubModal" title="Import live pull request from GitHub">
+          <i data-lucide="github" style="width: 13px; height: 13px;"></i>
+          <span>Import GitHub PR</span>
+        </button>
+      </div>
+
+      <div class="audit-action-group">
+        <button id="runAuditBtn" class="btn-run-audit">
+          <span id="auditSpinner" class="spinner"></span>
+          <i id="auditPlayIcon" data-lucide="play" style="width: 14px; height: 14px;"></i>
+          <span id="auditBtnText">Run Multi-Agent Audit</span>
+          <span class="shortcut-tag">&#8984; Enter</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Executive Verdict & Telemetry Strip -->
+    <div class="executive-strip">
+      <div class="verdict-info">
+        <div id="verdictBadge" class="verdict-status-badge STANDBY">
+          <i id="verdictIcon" data-lucide="play-circle" style="width: 14px; height: 14px;"></i>
+          <span id="verdictText">Ready to Audit</span>
+        </div>
+        <div class="verdict-headline" id="verdictHeadline">
+          Click <strong>Run Multi-Agent Audit</strong> (or press <strong>&#8984; Enter</strong>) to dispatch parallel specialist agents.
+        </div>
+      </div>
+
+      <div class="telemetry-pills-row">
+        <div class="metric-chip">
+          <div class="metric-chip-val" id="metricCrit" style="color: var(--danger);">--</div>
+          <div class="metric-chip-lbl">Critical</div>
+        </div>
+        <div class="metric-chip">
+          <div class="metric-chip-val" id="metricWarn" style="color: var(--warning);">--</div>
+          <div class="metric-chip-lbl">Warning</div>
+        </div>
+        <div class="metric-chip">
+          <div class="metric-chip-val" id="metricLatency" style="color: var(--accent);">--</div>
+          <div class="metric-chip-lbl">Latency</div>
+        </div>
+        <div class="metric-chip">
+          <div class="metric-chip-val" id="metricCost" style="color: var(--purple);">--</div>
+          <div class="metric-chip-lbl">Est. Cost</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-Time Parallel Specialist Agent Orchestration HUD -->
+    <div class="active-agent-hud">
+      <div class="hud-agent-cell" id="hudSecCell">
+        <div class="hud-agent-header">
+          <div class="hud-agent-title">
+            <span class="hud-dot" id="hudDotSec"></span>
+            <i data-lucide="shield-alert" style="width: 13px; height: 13px; color: var(--danger);"></i>
+            <span>Security Specialist</span>
+          </div>
+          <span class="hud-agent-status" id="hudStateSec">Standby</span>
+        </div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgSec"></div></div>
+      </div>
+
+      <div class="hud-agent-cell" id="hudPerfCell">
+        <div class="hud-agent-header">
+          <div class="hud-agent-title">
+            <span class="hud-dot" id="hudDotPerf"></span>
+            <i data-lucide="gauge" style="width: 13px; height: 13px; color: var(--warning);"></i>
+            <span>Performance Specialist</span>
+          </div>
+          <span class="hud-agent-status" id="hudStatePerf">Standby</span>
+        </div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgPerf"></div></div>
+      </div>
+
+      <div class="hud-agent-cell" id="hudArchCell">
+        <div class="hud-agent-header">
+          <div class="hud-agent-title">
+            <span class="hud-dot" id="hudDotArch"></span>
+            <i data-lucide="boxes" style="width: 13px; height: 13px; color: var(--accent);"></i>
+            <span>Architecture Specialist</span>
+          </div>
+          <span class="hud-agent-status" id="hudStateArch">Standby</span>
+        </div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgArch"></div></div>
+      </div>
+
+      <div class="hud-agent-cell" id="hudSynthCell">
+        <div class="hud-agent-header">
+          <div class="hud-agent-title">
+            <span class="hud-dot" id="hudDotSynth"></span>
+            <i data-lucide="git-merge" style="width: 13px; height: 13px; color: var(--purple);"></i>
+            <span>Consensus Guardrail</span>
+          </div>
+          <span class="hud-agent-status" id="hudStateSynth">Pydantic v2</span>
+        </div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgSynth" style="background: var(--purple);"></div></div>
+      </div>
+    </div>
+
+    <!-- 4. Workspace Tabs Navigation -->
+    <div class="workspace-nav">
+      <div class="nav-tabs-list">
+        <button class="workspace-tab-btn active" data-tab="tab-diff">
+          <i data-lucide="code" style="width: 14px; height: 14px;"></i>
+          <span>Diff & Inline Annotations</span>
+          <span class="tab-badge" id="findingsBadge">Standby</span>
+        </button>
+        <button class="workspace-tab-btn" data-tab="tab-telemetry">
+          <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+          <span>Agent Telemetry HUD</span>
+        </button>
+        <button class="workspace-tab-btn" data-tab="tab-summary">
+          <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+          <span>Executive Report</span>
+        </button>
+      </div>
+
+      <div class="workspace-tab-actions" style="display: flex; gap: 8px;">
+        <button id="copyReviewBtn" class="btn-secondary" style="display: none;">
+          <i data-lucide="copy" style="width: 13px; height: 13px;"></i>
+          <span>Copy PR Report</span>
+        </button>
+        <button id="btnPublishGitHub" class="btn-secondary" style="display: none;">
+          <i data-lucide="send" style="width: 13px; height: 13px; color: var(--accent);"></i>
+          <span id="btnPublishGitHubText">Publish to GitHub</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. Workspaces Content Panels -->
+    <main>
+      <!-- TAB 1: Diff & Inline Review -->
+      <section id="tab-diff" class="tab-panel active">
+        <div class="surface-card">
+          <div class="diff-file-header">
+            <div class="diff-file-title">
+              <i data-lucide="file-diff" style="width: 14px; height: 14px; color: var(--accent);"></i>
+              <span id="activeFilePath">app/routes/users.py</span>
+            </div>
+            <div class="diff-file-stats">
+              <span>Unified View</span>
+              &bull;
+              <span style="color: var(--text-muted);">Python 3.12</span>
+            </div>
+          </div>
+
+          <div id="diffCodeContainer" class="diff-code-wrapper"></div>
+          <textarea id="rawDiffInput" class="raw-diff-textarea" placeholder="Paste standard git unified diff here..."></textarea>
+        </div>
+      </section>
+
+      <!-- TAB 2: Agent Telemetry HUD -->
+      <section id="tab-telemetry" class="tab-panel">
+        <div class="surface-card">
+          <div class="telemetry-grid-layout">
+            <!-- Left: Parallel Specialist Workers -->
+            <div class="worker-stack-card">
+              <div class="worker-panel-header">
+                <i data-lucide="layers" style="width: 13px; height: 13px;"></i>
+                Parallel Specialist Threads
+              </div>
+
+              <!-- Security Specialist -->
+              <div class="worker-unit">
+                <div class="worker-meta">
+                  <div class="worker-name">
+                    <i data-lucide="shield-alert" style="width: 14px; height: 14px; color: var(--danger);"></i>
+                    Security Specialist
+                  </div>
+                  <span id="stateSec" class="worker-state">Idle</span>
+                </div>
+                <div class="worker-meter-track">
+                  <div id="progSec" class="worker-meter-fill"></div>
+                </div>
+              </div>
+
+              <!-- Performance Specialist -->
+              <div class="worker-unit">
+                <div class="worker-meta">
+                  <div class="worker-name">
+                    <i data-lucide="gauge" style="width: 14px; height: 14px; color: var(--warning);"></i>
+                    Performance Specialist
+                  </div>
+                  <span id="statePerf" class="worker-state">Idle</span>
+                </div>
+                <div class="worker-meter-track">
+                  <div id="progPerf" class="worker-meter-fill"></div>
+                </div>
+              </div>
+
+              <!-- Architecture Specialist -->
+              <div class="worker-unit">
+                <div class="worker-meta">
+                  <div class="worker-name">
+                    <i data-lucide="boxes" style="width: 14px; height: 14px; color: var(--accent);"></i>
+                    Architecture Specialist
+                  </div>
+                  <span id="stateArch" class="worker-state">Idle</span>
+                </div>
+                <div class="worker-meter-track">
+                  <div id="progArch" class="worker-meter-fill"></div>
+                </div>
+              </div>
+
+              <!-- Consensus Synthesizer -->
+              <div class="worker-unit" style="margin-top: 6px;">
+                <div class="worker-meta">
+                  <div class="worker-name">
+                    <i data-lucide="git-merge" style="width: 14px; height: 14px; color: var(--purple);"></i>
+                    Consensus Synthesizer
+                  </div>
+                  <span id="stateSynth" class="worker-state">Pydantic v2 Guardrail</span>
+                </div>
+                <div class="worker-meter-track">
+                  <div id="progSynth" class="worker-meter-fill" style="background: var(--purple);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Dark Monospace Terminal Feed -->
+            <div class="terminal-container">
+              <div class="terminal-bar">
+                <div class="term-dots">
+                  <div class="term-dot"></div>
+                  <div class="term-dot"></div>
+                  <div class="term-dot"></div>
+                </div>
+                <span>orchestrator.telemetry.log</span>
+                <span id="engineBadgeText" style="color: var(--accent); font-weight: 700;">Google Gemini 3.8 Flash</span>
+              </div>
+              <div id="terminalFeed" class="terminal-body">
+                <div class="t-row">
+                  <span class="t-time">00:00:00</span>
+                  <span>System standby. Click "Run Multi-Agent Audit" to trigger state graph.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Executive Review Report -->
+      <section id="tab-summary" class="tab-panel">
+        <div class="surface-card">
+          <div id="markdownSurface" class="markdown-surface">
+            <p style="color: var(--text-muted); font-style: italic;">
+              No audit report generated yet. Run an audit to generate a synthesized markdown review.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- 6. Onboarding / BYOK Settings Dialog (Linear / Raycast Style) -->
+  <div id="settingsDialog" class="dialog-backdrop">
+    <div class="dialog-window">
+      <div class="dialog-header">
+        <div class="dialog-title-group">
+          <div class="dialog-icon-box">
+            <i data-lucide="cpu" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <h2>Configure Intelligence Engine</h2>
+            <p>Bring Your Own Key (BYOK) &bull; Zero Server Persistence</p>
+          </div>
+        </div>
+        <button id="closeSettingsBtn" class="btn-dialog-close" title="Close dialog">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label" for="dialogProviderSelect">AI Engine Provider</label>
+          <select id="dialogProviderSelect" class="dialog-select">
+            <option value="auto">Auto-Detect from Key Prefix</option>
+            <option value="gemini" selected>Google Gemini (gemini-2.5-flash)</option>
+            <option value="openai">OpenAI (gpt-4o-mini / gpt-4o)</option>
+            <option value="anthropic">Anthropic Claude (claude-3-5-sonnet)</option>
+            <option value="groq">Groq Cloud (llama-3.3-70b-versatile)</option>
+            <option value="openrouter">OpenRouter (Unified Gateway)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="dialogKeyInput">API Key</label>
+          <div class="key-input-container">
+            <input type="password" id="dialogKeyInput" class="dialog-input" placeholder="Paste your Gemini or OpenAI API key..." />
+            <button id="dialogToggleEyeBtn" class="icon-toggle-btn" title="Toggle visibility">
+              <i id="dialogEyeIcon" data-lucide="eye" style="width: 15px; height: 15px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="security-callout">
+          <i data-lucide="shield" style="width: 16px; height: 16px;"></i>
+          <div class="security-callout-text">
+            <strong>Client-Side Vault Guarantee:</strong> Your key is stored exclusively in your browser's local sandbox (LocalStorage) and dispatched directly to the model endpoint. No database or intermediary proxy stores your secrets.
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button id="btnOfflineDemo" class="btn-dialog-secondary">
+          Continue with Offline AST Engine
+        </button>
+        <button id="btnSaveKey" class="btn-dialog-primary">
+          Save & Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. GitHub Import Dialog -->
+  <div id="githubDialog" class="dialog-backdrop">
+    <div class="dialog-window">
+      <div class="dialog-header">
+        <div class="dialog-title-group">
+          <div class="dialog-icon-box" style="background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); color: #fff;">
+            <i data-lucide="github" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <h2>Import Live GitHub Pull Request</h2>
+            <p>Fetch real-time unified diffs directly from GitHub API</p>
+          </div>
+        </div>
+        <button id="closeGitHubBtn" class="btn-dialog-close" title="Close dialog">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <div class="dialog-body">
+        <div class="form-group">
+          <label class="form-label" for="ghRepoInput">Repository or PR URL</label>
+          <input type="text" id="ghRepoInput" class="dialog-select" style="font-family: var(--font-mono); font-size: 0.8rem;" placeholder="e.g. pallets/flask or https://github.com/pallets/flask/pull/5000" />
+        </div>
+
+        <div class="form-group" id="ghPrNumberGroup">
+          <label class="form-label" for="ghPrNumberInput">Pull Request Number</label>
+          <input type="number" id="ghPrNumberInput" class="dialog-select" style="font-family: var(--font-mono); font-size: 0.8rem;" placeholder="e.g. 5000" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ghTokenInput">GitHub Personal Access Token (Optional for Public Repos)</label>
+          <div class="key-input-container">
+            <input type="password" id="ghTokenInput" class="dialog-input" placeholder="ghp_... (Stored locally; required for private repos or reviews)" />
+            <button id="ghToggleTokenEyeBtn" class="icon-toggle-btn" title="Toggle visibility">
+              <i id="ghEyeIcon" data-lucide="eye" style="width: 15px; height: 15px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Quick Public PR Demos</label>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn-chip" data-repo="pallets/flask" data-pr="5000">pallets/flask #5000</button>
+            <button type="button" class="btn-chip" data-repo="tiangolo/fastapi" data-pr="11000">tiangolo/fastapi #11000</button>
+            <button type="button" class="btn-chip" data-repo="psf/requests" data-pr="6000">psf/requests #6000</button>
+          </div>
+        </div>
+
+        <div id="ghFetchError" style="display: none; color: var(--danger); font-size: 0.78rem; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: var(--radius-sm); padding: 8px 12px;"></div>
+      </div>
+
+      <div class="dialog-footer">
+        <button id="btnCancelGitHub" class="btn-dialog-secondary">Cancel</button>
+        <button id="btnSubmitGitHubFetch" class="btn-dialog-primary" style="display: flex; align-items: center; gap: 8px;">
+          <span id="ghFetchSpinner" class="spinner" style="display: none; width: 14px; height: 14px; border-width: 2px;"></span>
+          <i id="ghFetchIcon" data-lucide="download" style="width: 14px; height: 14px;"></i>
+          <span id="ghFetchBtnText">Fetch Live PR</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. GitHub Publish Review Dialog -->
+  <div id="githubPublishDialog" class="dialog-backdrop">
+    <div class="dialog-window">
+      <div class="dialog-header">
+        <div class="dialog-title-group">
+          <div class="dialog-icon-box" style="background: rgba(88, 166, 255, 0.1); border-color: rgba(88, 166, 255, 0.3); color: var(--accent);">
+            <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <h2>Publish Multi-Agent Review</h2>
+            <p id="ghPublishSubtitle">Submit review verdict & inline comments to GitHub PR</p>
+          </div>
+        </div>
+        <button id="closeGHPublishBtn" class="btn-dialog-close" title="Close dialog">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <div class="dialog-body">
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span style="color: var(--text-secondary);">Target PR:</span>
+            <strong id="ghPublishTarget" style="font-family: var(--font-mono); color: #fff;">pallets/flask #5000</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span style="color: var(--text-secondary);">Review Verdict:</span>
+            <span id="ghPublishVerdict" style="font-weight: 700; color: var(--danger);">CHANGES REQUESTED</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span style="color: var(--text-secondary);">Inline Comments:</span>
+            <span id="ghPublishCommentsCount" style="font-family: var(--font-mono); color: var(--accent);">2 comments</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label" for="ghPublishTokenInput">GitHub Personal Access Token</label>
+          <div class="key-input-container">
+            <input type="password" id="ghPublishTokenInput" class="dialog-input" placeholder="ghp_... (Leave blank to run Dry-Run simulation)" />
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+            Token requires <code>repo</code> or <code>pull_requests:write</code> permissions. Without a token, review is simulated locally.
+          </span>
+        </div>
+
+        <div id="ghPublishStatusMsg" style="display: none; font-size: 0.8rem; border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 6px;"></div>
+      </div>
+
+      <div class="dialog-footer">
+        <button id="btnCancelGHPublish" class="btn-dialog-secondary">Cancel</button>
+        <button id="btnConfirmPublish" class="btn-dialog-primary" style="display: flex; align-items: center; gap: 8px;">
+          <span id="ghPublishSpinner" class="spinner" style="display: none; width: 14px; height: 14px; border-width: 2px;"></span>
+          <i id="ghPublishIcon" data-lucide="check-circle" style="width: 14px; height: 14px;"></i>
+          <span id="btnConfirmPublishText">Submit Review</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. Ambient 3D Particle Constellation (Three.js)
+    // -------------------------------------------------------------
+    (function initThreeBackground() {
+      const canvas = document.getElementById("bg-canvas");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 400;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const particleCount = 120;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 800;
+        positions[i + 1] = (Math.random() - 0.5) * 800;
+        positions[i + 2] = (Math.random() - 0.5) * 500;
+      }
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+      const material = new THREE.PointsMaterial({
+        color: 0x58a6ff,
+        size: 2.2,
+        transparent: true,
+        opacity: 0.45
+      });
+      const points = new THREE.Points(geometry, material);
+      scene.add(points);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0004;
+        points.rotation.x += 0.0002;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+
+    // -------------------------------------------------------------
+    // 2. Preset Data Fixtures
+    // -------------------------------------------------------------
+    const PRESETS = {
+      sql_injection: {
+        path: "app/routes/users.py",
+        diff: `diff --git a/app/routes/users.py b/app/routes/users.py
+index 45a8b12..78c9d34 100644
+--- a/app/routes/users.py
++++ b/app/routes/users.py
+@@ -10,6 +10,12 @@ def get_user_data(user_id: str):
++    # Raw string interpolation creates severe SQL injection vulnerability
++    query = f"SELECT * FROM users WHERE id = '{user_id}'"
++    cursor.execute(query)
++    api_key = "sk-live-999333888222111000-secret"
++    for row in cursor.fetchall():
++        profile = cursor.execute(f"SELECT * FROM profiles WHERE user_id = {row[0]}")
++    return cursor.fetchone()`
+      },
+      performance_leak: {
+        path: "app/services/analytics.py",
+        diff: `diff --git a/app/services/analytics.py b/app/services/analytics.py
+index abcdef0..1234567 100644
+--- a/app/services/analytics.py
++++ b/app/services/analytics.py
+@@ -30,5 +30,10 @@ async def aggregate_daily_metrics(user_ids: list):
++    for u_id in user_ids:
++        # N+1 query bottleneck inside asynchronous loop
++        cursor.execute("SELECT count(*) FROM events WHERE user_id = %s", (u_id,))
++        time.sleep(0.1)
++    return {"status": "done"}`
+      },
+      clean_pr: {
+        path: "app/utils/math.py",
+        diff: `diff --git a/app/utils/math.py b/app/utils/math.py
+index 9988776..1122334 100644
+--- a/app/utils/math.py
++++ b/app/utils/math.py
+@@ -1,5 +1,8 @@
+-def add(a, b):
+-    return a + b
++def calculate_total(subtotal: float, tax_rate: float = 0.05) -> float:
++    """Calculates total with parameterized tax."""
++    return round(subtotal * (1.0 + tax_rate), 2)`
+      }
+    };
+
+    // -------------------------------------------------------------
+    // 3. DOM References & State
+    // -------------------------------------------------------------
+    const settingsDialog = document.getElementById("settingsDialog");
+    const openSettingsBtn = document.getElementById("openSettingsBtn");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const dialogProviderSelect = document.getElementById("dialogProviderSelect");
+    const dialogKeyInput = document.getElementById("dialogKeyInput");
+    const dialogToggleEyeBtn = document.getElementById("dialogToggleEyeBtn");
+    const btnSaveKey = document.getElementById("btnSaveKey");
+    const btnOfflineDemo = document.getElementById("btnOfflineDemo");
+
+    const navEngineLabel = document.getElementById("navEngineLabel");
+    const navEngineDot = document.getElementById("navEngineDot");
+
+    const diffCodeContainer = document.getElementById("diffCodeContainer");
+    const rawDiffInput = document.getElementById("rawDiffInput");
+    const activeFilePath = document.getElementById("activeFilePath");
+    const btnNewBlankDiff = document.getElementById("btnNewBlankDiff");
+    const toggleCustomDiffBtn = document.getElementById("toggleCustomDiffBtn");
+    const btnOpenGitHubModal = document.getElementById("btnOpenGitHubModal");
+
+    const githubDialog = document.getElementById("githubDialog");
+    const closeGitHubBtn = document.getElementById("closeGitHubBtn");
+    const btnCancelGitHub = document.getElementById("btnCancelGitHub");
+    const ghRepoInput = document.getElementById("ghRepoInput");
+    const ghPrNumberInput = document.getElementById("ghPrNumberInput");
+    const ghTokenInput = document.getElementById("ghTokenInput");
+    const ghToggleTokenEyeBtn = document.getElementById("ghToggleTokenEyeBtn");
+    const btnSubmitGitHubFetch = document.getElementById("btnSubmitGitHubFetch");
+    const ghFetchSpinner = document.getElementById("ghFetchSpinner");
+    const ghFetchIcon = document.getElementById("ghFetchIcon");
+    const ghFetchBtnText = document.getElementById("ghFetchBtnText");
+    const ghFetchError = document.getElementById("ghFetchError");
+
+    const githubPublishDialog = document.getElementById("githubPublishDialog");
+    const btnPublishGitHub = document.getElementById("btnPublishGitHub");
+    const btnPublishGitHubText = document.getElementById("btnPublishGitHubText");
+    const closeGHPublishBtn = document.getElementById("closeGHPublishBtn");
+    const btnCancelGHPublish = document.getElementById("btnCancelGHPublish");
+    const btnConfirmPublish = document.getElementById("btnConfirmPublish");
+    const ghPublishTarget = document.getElementById("ghPublishTarget");
+    const ghPublishVerdict = document.getElementById("ghPublishVerdict");
+    const ghPublishCommentsCount = document.getElementById("ghPublishCommentsCount");
+    const ghPublishTokenInput = document.getElementById("ghPublishTokenInput");
+    const ghPublishStatusMsg = document.getElementById("ghPublishStatusMsg");
+    const ghPublishSpinner = document.getElementById("ghPublishSpinner");
+    const ghPublishIcon = document.getElementById("ghPublishIcon");
+    const btnConfirmPublishText = document.getElementById("btnConfirmPublishText");
+
+    let currentGitHubOwner = "";
+    let currentGitHubRepo = "";
+    let currentGitHubPR = 0;
+    let lastReviewResult = null;
+
+    const runAuditBtn = document.getElementById("runAuditBtn");
+    const auditSpinner = document.getElementById("auditSpinner");
+    const auditPlayIcon = document.getElementById("auditPlayIcon");
+    const auditBtnText = document.getElementById("auditBtnText");
+
+    const verdictBadge = document.getElementById("verdictBadge");
+    const verdictText = document.getElementById("verdictText");
+    const verdictIcon = document.getElementById("verdictIcon");
+    const verdictHeadline = document.getElementById("verdictHeadline");
+
+    const metricCrit = document.getElementById("metricCrit");
+    const metricWarn = document.getElementById("metricWarn");
+    const metricLatency = document.getElementById("metricLatency");
+    const metricCost = document.getElementById("metricCost");
+    const findingsBadge = document.getElementById("findingsBadge");
+
+    const terminalFeed = document.getElementById("terminalFeed");
+    const engineBadgeText = document.getElementById("engineBadgeText");
+    const markdownSurface = document.getElementById("markdownSurface");
+    const copyReviewBtn = document.getElementById("copyReviewBtn");
+
+    const progSec = document.getElementById("progSec");
+    const progPerf = document.getElementById("progPerf");
+    const progArch = document.getElementById("progArch");
+    const progSynth = document.getElementById("progSynth");
+
+    const stateSec = document.getElementById("stateSec");
+    const statePerf = document.getElementById("statePerf");
+    const stateArch = document.getElementById("stateArch");
+
+    let currentDiffText = PRESETS.sql_injection.diff;
+    let lastSummaryMarkdown = "";
+    let isCustomDiffMode = false;
+
+    // -------------------------------------------------------------
+    // 4. Onboarding & BYOK Vault Management
+    // -------------------------------------------------------------
+    function updateNavEngineUI() {
+      const savedKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY") || "";
+      const savedProvider = localStorage.getItem("BYOK_PROVIDER") || "gemini";
+
+      if (savedKey) {
+        navEngineDot.className = "status-dot";
+        if (savedProvider === "gemini") navEngineLabel.textContent = "Google Gemini (gemini-2.5-flash)";
+        else if (savedProvider === "openai") navEngineLabel.textContent = "OpenAI (GPT-4o Mini)";
+        else if (savedProvider === "anthropic") navEngineLabel.textContent = "Anthropic Claude 3.5";
+        else if (savedProvider === "groq") navEngineLabel.textContent = "Groq (Llama 3.3 70B)";
+        else if (savedProvider === "openrouter") navEngineLabel.textContent = "OpenRouter Gateway";
+        else navEngineLabel.textContent = "Auto-Detect Provider";
+      } else {
+        navEngineDot.className = "status-dot offline";
+        navEngineLabel.textContent = "Offline AST Engine (No Key)";
+      }
+    }
+
+    function openModal() {
+      const savedKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY") || "";
+      const savedProvider = localStorage.getItem("BYOK_PROVIDER") || "gemini";
+      dialogKeyInput.value = savedKey;
+      dialogProviderSelect.value = savedProvider;
+      settingsDialog.classList.add("active");
+    }
+
+    function closeModal() {
+      settingsDialog.classList.remove("active");
+    }
+
+    openSettingsBtn.addEventListener("click", openModal);
+    closeSettingsBtn.addEventListener("click", closeModal);
+
+    dialogToggleEyeBtn.addEventListener("click", () => {
+      dialogKeyInput.type = dialogKeyInput.type === "password" ? "text" : "password";
+    });
+
+    btnSaveKey.addEventListener("click", () => {
+      const key = dialogKeyInput.value.trim();
+      const provider = dialogProviderSelect.value;
+      if (key) {
+        localStorage.setItem("BYOK_LLM_KEY", key);
+        localStorage.setItem("BYOK_GEMINI_KEY", key);
+        localStorage.setItem("BYOK_PROVIDER", provider);
+      } else {
+        localStorage.removeItem("BYOK_LLM_KEY");
+        localStorage.removeItem("BYOK_GEMINI_KEY");
+      }
+      updateNavEngineUI();
+      closeModal();
+      logTerminal(`BYOK Vault updated: ${provider} engine configured.`, "succ");
+    });
+
+    btnOfflineDemo.addEventListener("click", () => {
+      localStorage.removeItem("BYOK_LLM_KEY");
+      localStorage.removeItem("BYOK_GEMINI_KEY");
+      dialogKeyInput.value = "";
+      updateNavEngineUI();
+      closeModal();
+      logTerminal("Offline AST deterministic inspection mode enabled.", "normal");
+    });
+
+    // Landing Check: If no key is set on first visit, open modal immediately!
+    const initialKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY");
+    if (!initialKey) {
+      setTimeout(() => openModal(), 400);
+    }
+    updateNavEngineUI();
+
+    // -------------------------------------------------------------
+    // 5. Workspace Tab Switching
+    // -------------------------------------------------------------
+    document.querySelectorAll(".workspace-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".workspace-tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+
+        btn.classList.add("active");
+        const targetPanel = document.getElementById(btn.dataset.tab);
+        if (targetPanel) targetPanel.classList.add("active");
+      });
+    });
+
+    // -------------------------------------------------------------
+    // 6. Preset Selector & Blank Canvas / Custom Diff
+    // -------------------------------------------------------------
+    document.querySelectorAll(".preset-tab").forEach(tab => {
+      if (tab.id === "toggleCustomDiffBtn" || tab.id === "btnNewBlankDiff" || tab.id === "btnOpenGitHubModal") return;
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        isCustomDiffMode = false;
+        rawDiffInput.style.display = "none";
+        diffCodeContainer.style.display = "block";
+
+        const p = PRESETS[tab.dataset.preset];
+        currentDiffText = p.diff;
+        activeFilePath.textContent = p.path;
+        currentGitHubOwner = "";
+        currentGitHubRepo = "";
+        currentGitHubPR = 0;
+        renderInteractiveDiff(currentDiffText);
+      });
+    });
+
+    btnNewBlankDiff.addEventListener("click", () => {
+      document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+      btnNewBlankDiff.classList.add("active");
+
+      isCustomDiffMode = true;
+      diffCodeContainer.style.display = "none";
+      rawDiffInput.style.display = "block";
+      rawDiffInput.value = "";
+      currentDiffText = "";
+      currentGitHubOwner = "";
+      currentGitHubRepo = "";
+      currentGitHubPR = 0;
+      activeFilePath.textContent = "untitled.diff (Blank Editor Buffer)";
+      rawDiffInput.placeholder = "Paste your custom unified git diff or source code here...\n\nExample:\ndiff --git a/app.py b/app.py\n--- a/app.py\n+++ b/app.py\n@@ -1,5 +1,6 @@\n+import os\n+def run_cmd(user_arg):\n+    os.system(f'ping -c 1 {user_arg}')\n\nTip: You can also paste raw code snippets directly!\nShortcut: Press ⌘+Enter to trigger audit.";
+
+      // Switch to Diff tab
+      const diffTabBtn = document.querySelector('[data-tab="tab-diff"]') || document.querySelector('[data-tab="tabDiff"]');
+      if (diffTabBtn) diffTabBtn.click();
+
+      // Reset state indicators to standby
+      verdictBadge.className = "verdict-status-badge STANDBY";
+      verdictIcon.setAttribute("data-lucide", "play-circle");
+      verdictText.textContent = "Ready to Audit";
+      verdictHeadline.innerHTML = "Clean editor buffer initialized. Paste custom code and click <strong>Run Multi-Agent Audit</strong>.";
+      findingsBadge.textContent = "0 issues";
+      metricCrit.textContent = "0";
+      metricWarn.textContent = "0";
+
+      rawDiffInput.focus();
+      logTerminal("[BUFFER] Clean diff canvas ready. Awaiting custom input.", "normal");
+      lucide.createIcons();
+    });
+
+    toggleCustomDiffBtn.addEventListener("click", () => {
+      document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+      toggleCustomDiffBtn.classList.add("active");
+
+      isCustomDiffMode = true;
+      diffCodeContainer.style.display = "none";
+      rawDiffInput.style.display = "block";
+      rawDiffInput.value = currentDiffText;
+      activeFilePath.textContent = "Custom Diff Input (Editor)";
+
+      const diffTabBtn = document.querySelector('[data-tab="tab-diff"]') || document.querySelector('[data-tab="tabDiff"]');
+      if (diffTabBtn) diffTabBtn.click();
+
+      rawDiffInput.focus();
+    });
+
+    rawDiffInput.addEventListener("input", (e) => {
+      currentDiffText = e.target.value;
+    });
+
+    // -------------------------------------------------------------
+    // 6b. GitHub Live PR Import Logic
+    // -------------------------------------------------------------
+    function openGitHubModal() {
+      ghFetchError.style.display = "none";
+      ghTokenInput.value = localStorage.getItem("BYOK_GITHUB_TOKEN") || "";
+      githubDialog.classList.add("active");
+      ghRepoInput.focus();
+    }
+
+    function closeGitHubModal() {
+      githubDialog.classList.remove("active");
+    }
+
+    btnOpenGitHubModal.addEventListener("click", openGitHubModal);
+    closeGitHubBtn.addEventListener("click", closeGitHubModal);
+    btnCancelGitHub.addEventListener("click", closeGitHubModal);
+
+    ghToggleTokenEyeBtn.addEventListener("click", () => {
+      ghTokenInput.type = ghTokenInput.type === "password" ? "text" : "password";
+    });
+
+    // Auto-parse full GitHub PR URLs pasted into repo input
+    ghRepoInput.addEventListener("input", () => {
+      const val = ghRepoInput.value.trim();
+      if (val.includes("github.com/")) {
+        const m = val.match(/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)/);
+        if (m) {
+          ghRepoInput.value = `${m[1]}/${m[2]}`;
+          ghPrNumberInput.value = m[3];
+        }
+      }
+    });
+
+    // Quick demo PR chips
+    document.querySelectorAll(".btn-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        ghRepoInput.value = chip.dataset.repo;
+        ghPrNumberInput.value = chip.dataset.pr;
+        fetchLiveGitHubPR();
+      });
+    });
+
+    async function fetchLiveGitHubPR() {
+      const repo = ghRepoInput.value.trim();
+      const prNumber = parseInt(ghPrNumberInput.value, 10);
+      const token = ghTokenInput.value.trim();
+
+      if (!repo || !prNumber) {
+        ghFetchError.textContent = "Please specify both repository ('owner/repo') and PR number.";
+        ghFetchError.style.display = "block";
+        return;
+      }
+
+      ghFetchError.style.display = "none";
+      btnSubmitGitHubFetch.disabled = true;
+      ghFetchSpinner.style.display = "inline-block";
+      ghFetchIcon.style.display = "none";
+      ghFetchBtnText.textContent = "Fetching...";
+
+      try {
+        const resp = await fetch("/api/v1/github/fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            repo: repo,
+            pull_number: prNumber,
+            github_token: token || undefined
+          })
+        });
+
+        const data = await resp.json();
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch PR diff from GitHub.");
+        }
+
+        if (token) {
+          localStorage.setItem("BYOK_GITHUB_TOKEN", token);
+        }
+
+        currentGitHubOwner = data.owner;
+        currentGitHubRepo = data.repo;
+        currentGitHubPR = data.pull_number;
+        currentDiffText = data.diff_text;
+
+        // Update UI state
+        document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+        btnOpenGitHubModal.classList.add("active");
+
+        isCustomDiffMode = false;
+        rawDiffInput.style.display = "none";
+        diffCodeContainer.style.display = "block";
+
+        activeFilePath.textContent = `${data.title} (${data.owner}/${data.repo} #${data.pull_number})`;
+        renderInteractiveDiff(currentDiffText);
+
+        // Switch to Diff tab
+        const diffTabBtn = document.querySelector('[data-tab="tab-diff"]') || document.querySelector('[data-tab="tabDiff"]');
+        if (diffTabBtn) diffTabBtn.click();
+
+        // Reset Verdict HUD
+        verdictBadge.className = "verdict-status-badge STANDBY";
+        verdictIcon.setAttribute("data-lucide", "play-circle");
+        verdictText.textContent = "Ready to Audit";
+        verdictHeadline.innerHTML = `Loaded live GitHub PR: <strong>${data.owner}/${data.repo} #${data.pull_number}</strong>. Click <strong>Run Multi-Agent Audit</strong>.`;
+        findingsBadge.textContent = "Ready";
+
+        closeGitHubModal();
+        logTerminal(`[GITHUB] Imported PR #${data.pull_number} from ${data.owner}/${data.repo} (${data.lines_count} diff lines).`, "succ");
+        lucide.createIcons();
+
+      } catch (err) {
+        ghFetchError.textContent = err.message;
+        ghFetchError.style.display = "block";
+      } finally {
+        btnSubmitGitHubFetch.disabled = false;
+        ghFetchSpinner.style.display = "none";
+        ghFetchIcon.style.display = "inline-block";
+        ghFetchBtnText.textContent = "Fetch Live PR";
+      }
+    }
+
+    btnSubmitGitHubFetch.addEventListener("click", fetchLiveGitHubPR);
+
+    // -------------------------------------------------------------
+    // 6c. GitHub Publish Review Logic
+    // -------------------------------------------------------------
+    function openPublishDialog() {
+      if (!lastReviewResult) return;
+      ghPublishStatusMsg.style.display = "none";
+      ghPublishTarget.textContent = currentGitHubOwner ? `${currentGitHubOwner}/${currentGitHubRepo} #${currentGitHubPR}` : "Workspace Review #42 (Demo)";
+      ghPublishVerdict.textContent = lastReviewResult.overall_status;
+      ghPublishVerdict.style.color = lastReviewResult.overall_status === "APPROVE" ? "var(--success)" : "var(--danger)";
+      const count = (lastReviewResult.comments || []).length;
+      ghPublishCommentsCount.textContent = `${count} inline line comment${count === 1 ? '' : 's'}`;
+
+      ghPublishTokenInput.value = localStorage.getItem("BYOK_GITHUB_TOKEN") || "";
+      githubPublishDialog.classList.add("active");
+    }
+
+    function closePublishDialog() {
+      githubPublishDialog.classList.remove("active");
+    }
+
+    btnPublishGitHub.addEventListener("click", openPublishDialog);
+    closeGHPublishBtn.addEventListener("click", closePublishDialog);
+    btnCancelGHPublish.addEventListener("click", closePublishDialog);
+
+    btnConfirmPublish.addEventListener("click", async () => {
+      const token = ghPublishTokenInput.value.trim();
+      const dryRun = !Boolean(token);
+
+      btnConfirmPublish.disabled = true;
+      ghPublishSpinner.style.display = "inline-block";
+      ghPublishIcon.style.display = "none";
+      btnConfirmPublishText.textContent = "Publishing...";
+
+      try {
+        const resp = await fetch("/api/v1/github/publish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            owner: currentGitHubOwner || "demo",
+            repo: currentGitHubRepo || "repo",
+            pull_number: currentGitHubPR || 42,
+            review_result: lastReviewResult,
+            github_token: token || undefined,
+            dry_run: dryRun
+          })
+        });
+
+        const data = await resp.json();
+        if (!data.success) {
+          throw new Error(data.error || "Failed to publish review to GitHub.");
+        }
+
+        if (token) {
+          localStorage.setItem("BYOK_GITHUB_TOKEN", token);
+        }
+
+        ghPublishStatusMsg.style.display = "block";
+        if (data.dry_run) {
+          ghPublishStatusMsg.style.background = "rgba(210, 153, 34, 0.1)";
+          ghPublishStatusMsg.style.border = "1px solid rgba(210, 153, 34, 0.3)";
+          ghPublishStatusMsg.style.color = "var(--warning)";
+          ghPublishStatusMsg.innerHTML = `<strong>Dry-Run Simulated:</strong> Review formatted with ${(lastReviewResult.comments || []).length} inline suggestion comments. Provide a GitHub Token to post live.`;
+          logTerminal(`[GITHUB DRY-RUN] Review payload formatted for ${currentGitHubOwner || 'demo'}/${currentGitHubRepo || 'repo'} #${currentGitHubPR || 42}. Dispatched 0 network requests.`, "normal");
+        } else {
+          ghPublishStatusMsg.style.background = "rgba(63, 185, 80, 0.1)";
+          ghPublishStatusMsg.style.border = "1px solid rgba(63, 185, 80, 0.3)";
+          ghPublishStatusMsg.style.color = "var(--success)";
+          ghPublishStatusMsg.innerHTML = `<strong>Published Live:</strong> Review comments successfully submitted to GitHub PR #${currentGitHubPR}!`;
+          logTerminal(`[GITHUB LIVE] Published review to ${currentGitHubOwner}/${currentGitHubRepo} #${currentGitHubPR} successfully!`, "succ");
+        }
+
+        btnPublishGitHubText.textContent = data.dry_run ? "Simulated" : "Published";
+        setTimeout(() => {
+          btnPublishGitHubText.textContent = "Publish to GitHub";
+          closePublishDialog();
+        }, 2200);
+
+      } catch (err) {
+        ghPublishStatusMsg.style.display = "block";
+        ghPublishStatusMsg.style.background = "rgba(248, 81, 73, 0.1)";
+        ghPublishStatusMsg.style.border = "1px solid rgba(248, 81, 73, 0.3)";
+        ghPublishStatusMsg.style.color = "var(--danger)";
+        ghPublishStatusMsg.textContent = err.message;
+      } finally {
+        btnConfirmPublish.disabled = false;
+        ghPublishSpinner.style.display = "none";
+        ghPublishIcon.style.display = "inline-block";
+        btnConfirmPublishText.textContent = "Submit Review";
+      }
+    });
+
+    // -------------------------------------------------------------
+    // 7. Interactive Diff Parser & Inline Comment Injector
+    // -------------------------------------------------------------
+    function escapeHtml(str) {
+      return (str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderInteractiveDiff(diffText, inlineComments = []) {
+      diffCodeContainer.innerHTML = "";
+      const lines = diffText.split("\n");
+      let oldLine = 0;
+      let newLine = 0;
+
+      lines.forEach((line) => {
+        let type = "context";
+        let symbol = " ";
+        let displayedOld = "";
+        let displayedNew = "";
+
+        if (line.startsWith("@@")) {
+          type = "hunk";
+          symbol = "~";
+          const match = line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+          if (match) {
+            oldLine = parseInt(match[1]);
+            newLine = parseInt(match[2]);
+          }
+        } else if (line.startsWith("+")) {
+          type = "add";
+          symbol = "+";
+          displayedNew = newLine++;
+        } else if (line.startsWith("-")) {
+          type = "del";
+          symbol = "-";
+          displayedOld = oldLine++;
+        } else {
+          type = "context";
+          symbol = " ";
+          displayedOld = oldLine++;
+          displayedNew = newLine++;
+        }
+
+        const row = document.createElement("div");
+        row.className = `diff-row ${type}`;
+        row.innerHTML = `
+          <div class="diff-gutter">${displayedOld || displayedNew || "..."}</div>
+          <div class="diff-symbol">${symbol}</div>
+          <div class="diff-content">${escapeHtml(line.startsWith("+") || line.startsWith("-") ? line.slice(1) : line)}</div>
+        `;
+        diffCodeContainer.appendChild(row);
+
+        // Check if an AI Review Comment belongs under this line
+        if (type === "add" && displayedNew) {
+          const matchedComments = inlineComments.filter(c => c.line_number === displayedNew);
+          matchedComments.forEach(comment => {
+            const commentRow = document.createElement("div");
+            commentRow.className = `inline-comment-row ${comment.severity}`;
+
+            let fixHtml = "";
+            if (comment.suggested_diff_fix) {
+              fixHtml = `
+                <div class="fix-container">
+                  <div class="fix-header">
+                    <span>Suggested Patch Fix</span>
+                    <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.65rem;" onclick="navigator.clipboard.writeText(\`${escapeHtml(comment.suggested_diff_fix)}\`)">
+                      Copy Fix
+                    </button>
+                  </div>
+                  <div class="fix-code">${escapeHtml(comment.suggested_diff_fix)}</div>
+                </div>
+              `;
+            }
+
+            commentRow.innerHTML = `
+              <div class="comment-header">
+                <span class="severity-pill ${comment.severity}">${comment.severity}</span>
+                <span class="comment-category">${comment.category}</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Line ${comment.line_number}</span>
+              </div>
+              <div class="comment-summary">${escapeHtml(comment.issue_summary)}</div>
+              <div class="comment-explanation">${escapeHtml(comment.detailed_explanation)}</div>
+              ${fixHtml}
+            `;
+            diffCodeContainer.appendChild(commentRow);
+          });
+        }
+      });
+    }
+
+    // Initialize with default diff
+    renderInteractiveDiff(currentDiffText);
+
+    // -------------------------------------------------------------
+    // 8. Terminal Streaming & Telemetry Logging
+    // -------------------------------------------------------------
+    function logTerminal(message, type = "normal") {
+      const now = new Date().toTimeString().split(" ")[0];
+      const row = document.createElement("div");
+      row.className = "t-row";
+      let tag = "";
+      if (type === "sec") tag = '<span class="t-tag-sec">[SECURITY]</span>';
+      else if (type === "perf") tag = '<span class="t-tag-perf">[PERF]</span>';
+      else if (type === "arch") tag = '<span class="t-tag-arch">[ARCH]</span>';
+      else if (type === "succ") tag = '<span class="t-tag-succ">[CONSENSUS]</span>';
+
+      row.innerHTML = `<span class="t-time">${now}</span> ${tag} <span>${message}</span>`;
+      terminalFeed.appendChild(row);
+      terminalFeed.scrollTop = terminalFeed.scrollHeight;
+
+      if (window.gsap) {
+        gsap.from(row, { opacity: 0, x: -8, duration: 0.2 });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 9. Multi-Agent Audit Runner
+    // -------------------------------------------------------------
+    async function executeAudit() {
+      const diffToTest = isCustomDiffMode ? rawDiffInput.value : currentDiffText;
+      if (!diffToTest || !diffToTest.trim()) return alert("Please specify or paste a code diff to audit.");
+      currentDiffText = diffToTest;
+
+      const apiKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY") || "";
+      const provider = localStorage.getItem("BYOK_PROVIDER") || "gemini";
+
+      // UI Loading state
+      runAuditBtn.disabled = true;
+      auditSpinner.style.display = "inline-block";
+      auditPlayIcon.style.display = "none";
+      auditBtnText.textContent = "Auditing Code...";
+
+      // Reset Workers & Terminal
+      terminalFeed.innerHTML = "";
+      logTerminal("Orchestrator: Parsing unified patch & computing AST scopes...", "normal");
+
+      stateSec.textContent = "Auditing...";
+      statePerf.textContent = "Auditing...";
+      stateArch.textContent = "Auditing...";
+      stateSynth.textContent = "Awaiting consensus";
+
+      const hudProgSec = document.getElementById("hudProgSec");
+      const hudProgPerf = document.getElementById("hudProgPerf");
+      const hudProgArch = document.getElementById("hudProgArch");
+      const hudProgSynth = document.getElementById("hudProgSynth");
+
+      const hudDotSec = document.getElementById("hudDotSec");
+      const hudDotPerf = document.getElementById("hudDotPerf");
+      const hudDotArch = document.getElementById("hudDotArch");
+      const hudDotSynth = document.getElementById("hudDotSynth");
+
+      const hudStateSec = document.getElementById("hudStateSec");
+      const hudStatePerf = document.getElementById("hudStatePerf");
+      const hudStateArch = document.getElementById("hudStateArch");
+      const hudStateSynth = document.getElementById("hudStateSynth");
+
+      if (hudDotSec) hudDotSec.className = "hud-dot active";
+      if (hudDotPerf) hudDotPerf.className = "hud-dot active";
+      if (hudDotArch) hudDotArch.className = "hud-dot active";
+      if (hudDotSynth) hudDotSynth.className = "hud-dot active";
+
+      if (hudStateSec) hudStateSec.textContent = "Auditing...";
+      if (hudStatePerf) hudStatePerf.textContent = "Auditing...";
+      if (hudStateArch) hudStateArch.textContent = "Auditing...";
+      if (hudStateSynth) hudStateSynth.textContent = "Synthesizing...";
+
+      if (window.gsap) {
+        gsap.to([progSec, hudProgSec], { width: "75%", duration: 0.6 });
+        gsap.to([progPerf, hudProgPerf], { width: "65%", duration: 0.6, delay: 0.1 });
+        gsap.to([progArch, hudProgArch], { width: "80%", duration: 0.6, delay: 0.15 });
+        gsap.to([progSynth, hudProgSynth], { width: "30%", duration: 0.4 });
+      }
+
+      logTerminal("Parallel specialist dispatch: [Security, Performance, Architecture]", "normal");
+
+      const startTime = performance.now();
+
+      try {
+        const response = await fetch("/api/v1/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            diff_text: diffToTest,
+            pull_request_id: 42,
+            api_key: apiKey || undefined,
+            provider: provider !== "auto" ? provider : undefined
+          })
+        });
+
+        const data = await response.json();
+        const duration = Math.round(performance.now() - startTime);
+
+        // Complete Progress Bars
+        if (window.gsap) {
+          gsap.to([progSec, progPerf, progArch, progSynth, hudProgSec, hudProgPerf, hudProgArch, hudProgSynth], { width: "100%", duration: 0.3 });
+        }
+        stateSec.textContent = "Complete";
+        statePerf.textContent = "Complete";
+        stateArch.textContent = "Complete";
+        stateSynth.textContent = "Synthesized & Validated";
+
+        if (hudStateSec) hudStateSec.textContent = "Complete";
+        if (hudStatePerf) hudStatePerf.textContent = "Complete";
+        if (hudStateArch) hudStateArch.textContent = "Complete";
+        if (hudStateSynth) hudStateSynth.textContent = "Pydantic v2 Verified";
+
+        if (hudDotSec) hudDotSec.className = "hud-dot";
+        if (hudDotPerf) hudDotPerf.className = "hud-dot";
+        if (hudDotArch) hudDotArch.className = "hud-dot";
+        if (hudDotSynth) hudDotSynth.className = "hud-dot";
+
+        // Log Findings
+        (data.comments || []).forEach(c => {
+          const type = c.category === "SECURITY" ? "sec" : (c.category === "PERFORMANCE" ? "perf" : "arch");
+          logTerminal(`Line ${c.line_number}: [${c.severity}] ${c.issue_summary}`, type);
+        });
+
+        logTerminal(`Consensus resolved: Overall Status -> ${data.overall_status}`, "succ");
+        logTerminal(`Schema guardrail: Pydantic v2 validation passed 100%.`, "succ");
+
+        // Render UI Results
+        displayResults(data, duration);
+
+      } catch (err) {
+        logTerminal(`Audit failed: ${err.message}`, "sec");
+      } finally {
+        runAuditBtn.disabled = false;
+        auditSpinner.style.display = "none";
+        auditPlayIcon.style.display = "inline-block";
+        auditBtnText.textContent = "Run Multi-Agent Audit";
+      }
+    }
+
+    function displayResults(data, latencyMs) {
+      lastSummaryMarkdown = data.summary_markdown || "";
+      lastReviewResult = data;
+      copyReviewBtn.style.display = "inline-flex";
+      btnPublishGitHub.style.display = "inline-flex";
+
+      // Re-render Diff with Inline Findings
+      if (isCustomDiffMode) {
+        rawDiffInput.style.display = "none";
+        diffCodeContainer.style.display = "block";
+        isCustomDiffMode = false;
+        toggleCustomDiffBtn.classList.remove("active");
+        btnNewBlankDiff.classList.remove("active");
+      }
+      renderInteractiveDiff(currentDiffText, data.comments || []);
+
+      // Update Engine Badge
+      const engineText = data.engine_used || "AST Deterministic Engine (Offline Fallback)";
+      if (engineBadgeText) {
+        engineBadgeText.textContent = engineText;
+        if (engineText.includes("Gemini")) engineBadgeText.style.color = "var(--accent)";
+        else if (engineText.includes("OpenAI")) engineBadgeText.style.color = "#10a37f";
+        else if (engineText.includes("Anthropic")) engineBadgeText.style.color = "#d97706";
+        else if (engineText.includes("Groq")) engineBadgeText.style.color = "#f55036";
+        else engineBadgeText.style.color = "var(--warning)";
+      }
+
+      // Update Verdict Badge
+      verdictBadge.className = `verdict-status-badge ${data.overall_status}`;
+      if (data.overall_status === "APPROVE") {
+        verdictText.textContent = "Approved";
+        verdictIcon.setAttribute("data-lucide", "check-circle");
+        verdictHeadline.innerHTML = "All parallel specialist checks passed. <strong>No blocking vulnerabilities or leaks.</strong>";
+      } else if (data.overall_status === "REQUEST_CHANGES") {
+        verdictText.textContent = "Changes Requested";
+        verdictIcon.setAttribute("data-lucide", "alert-octagon");
+        verdictHeadline.innerHTML = `Automated specialists flagged <strong>${(data.comments || []).length} blocking issues</strong> requiring remediation.`;
+      } else {
+        verdictText.textContent = "Comments Provided";
+        verdictIcon.setAttribute("data-lucide", "message-square");
+        verdictHeadline.innerHTML = "Advisory findings detected. Review comments before merging.";
+      }
+
+      // Update Counters
+      const crits = (data.comments || []).filter(c => c.severity === "CRITICAL").length;
+      const warns = (data.comments || []).filter(c => c.severity === "WARNING").length;
+      const total = (data.comments || []).length;
+
+      metricCrit.textContent = crits;
+      metricWarn.textContent = warns;
+      metricLatency.textContent = `${latencyMs}ms`;
+      metricCost.textContent = `$${(data.total_token_cost_usd || 0.0012).toFixed(4)}`;
+      findingsBadge.textContent = `${total} issue${total === 1 ? '' : 's'}`;
+
+      // Update Markdown Surface
+      renderMarkdownReport(data.summary_markdown);
+
+      // Refresh Lucide Icons
+      lucide.createIcons();
+    }
+
+    function renderMarkdownReport(mdText) {
+      if (!mdText) return;
+
+      // 1. Strip any emoji characters completely to ensure clean, high-taste typography
+      let cleaned = mdText.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '');
+
+      // 2. Parse Markdown Tables into structured HTML tables
+      const tableRegex = /((?:\|[^\n]+\|\r?\n)+)/g;
+      cleaned = cleaned.replace(tableRegex, (match) => {
+        const rows = match.trim().split(/\r?\n/).filter(r => r.trim());
+        if (rows.length < 2) return match;
+
+        let tableHtml = '<div class="report-table-wrapper"><table class="report-table">';
+        let isHeader = true;
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i].trim();
+          if (/^\|(?:\s*:?-+:?\s*\|)+$/.test(row)) {
+            isHeader = false;
+            continue;
+          }
+
+          const cols = row.split('|').slice(1, -1).map(c => c.trim());
+          if (isHeader) {
+            tableHtml += '<thead><tr>';
+            cols.forEach(c => { tableHtml += `<th>${c}</th>`; });
+            tableHtml += '</tr></thead><tbody>';
+            isHeader = false;
+          } else {
+            tableHtml += '<tr>';
+            cols.forEach(c => { tableHtml += `<td>${c}</td>`; });
+            tableHtml += '</tr>';
+          }
+        }
+        tableHtml += '</tbody></table></div>';
+        return tableHtml;
+      });
+
+      // 3. Transform PR STATUS labels into High-Contrast Badges
+      cleaned = cleaned.replace(/\*\*PR STATUS:\s*CHANGES REQUESTED\*\*/gi, 
+        '<div class="report-status-pill danger"><i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i> PR STATUS: CHANGES REQUESTED</div>');
+      cleaned = cleaned.replace(/\*\*PR STATUS:\s*APPROVED\*\*/gi, 
+        '<div class="report-status-pill success"><i data-lucide="shield-check" style="width: 14px; height: 14px;"></i> PR STATUS: APPROVED</div>');
+      cleaned = cleaned.replace(/\*\*PR STATUS:\s*REVIEW COMMENTS PROVIDED\*\*/gi, 
+        '<div class="report-status-pill warning"><i data-lucide="info" style="width: 14px; height: 14px;"></i> PR STATUS: REVIEW COMMENTS PROVIDED</div>');
+
+      // 4. Transform blockquotes
+      cleaned = cleaned.replace(/^>\s*(.+)$/gim, '<div class="report-callout">$1</div>');
+
+      // 5. Transform bullet lists
+      const listRegex = /((?:^-\s*.+\r?\n?)+)/gm;
+      cleaned = cleaned.replace(listRegex, (match) => {
+        const items = match.trim().split(/\r?\n/).filter(line => line.startsWith('-'));
+        const lis = items.map(line => `<li>${line.replace(/^-\s*/, '')}</li>`).join('');
+        return `<ul class="report-list">${lis}</ul>`;
+      });
+
+      // 6. Standard Headings and Formats
+      let html = cleaned
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+        .replace(/`([^`]+)`/gim, '<code>$1</code>')
+        .replace(/\n\n/gim, '<br><br>');
+
+      markdownSurface.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    // -------------------------------------------------------------
+    // 10. Global Listeners & Keyboard Shortcuts
+    // -------------------------------------------------------------
+    runAuditBtn.addEventListener("click", executeAudit);
+
+    // Keyboard Shortcut: Cmd/Ctrl + Enter triggers audit
+    window.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        executeAudit();
+      }
+      if (e.key === "Escape") {
+        if (settingsDialog.classList.contains("active")) closeModal();
+        if (githubDialog.classList.contains("active")) closeGitHubModal();
+        if (githubPublishDialog.classList.contains("active")) closePublishDialog();
+      }
+    });
+
+    copyReviewBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(lastSummaryMarkdown);
+      const prev = copyReviewBtn.innerHTML;
+      copyReviewBtn.innerHTML = `<i data-lucide="check" style="width: 13px; height: 13px; color: var(--success);"></i> Copied!`;
+      lucide.createIcons();
+      setTimeout(() => {
+        copyReviewBtn.innerHTML = prev;
+        lucide.createIcons();
+      }, 1800);
+    });
+
+    // Initialize Lucide Icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

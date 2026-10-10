@@ -1,0 +1,10 @@
+diff --git a/app/services/analytics.py b/app/services/analytics.py
+index abcdef0..1234567 100644
+--- a/app/services/analytics.py
++++ b/app/services/analytics.py
+@@ -30,5 +30,10 @@ async def aggregate_daily_metrics(user_ids: list):
++    for u_id in user_ids:
++        # N+1 query bottleneck
++        cursor.execute("SELECT count(*) FROM events WHERE user_id = %s", (u_id,))
++        time.sleep(0.1)
++    return {"status": "done"}
