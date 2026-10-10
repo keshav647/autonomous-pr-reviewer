@@ -9,7 +9,7 @@ An autonomous, multi-agent code analysis bot that reviews GitHub Pull Requests v
 
 ---
 
-## 🏗️ Architecture & State Graph
+## Architecture & State Graph
 
 ```mermaid
 flowchart TD
@@ -35,7 +35,7 @@ flowchart TD
 
 ---
 
-## ⚡ Key Highlights & Engineering Signals
+## Key Highlights & Engineering Signals
 
 * **State Machine Orchestration:** Implements cyclical state graph flows with parallel specialist agents (Security, Performance, Architecture).
 * **AST Context Extraction:** Maps diff line changes directly to enclosing AST nodes (functions, classes, parameter lists, imports) to eliminate out-of-context hallucinations.
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 🚀 Quickstart Guide
+## Quickstart Guide
 
 ### 1. Run with Docker (Single Command)
 ```bash
@@ -74,7 +74,7 @@ python3 -m src.cli review --diff tests/fixtures/sample_clean_pr.diff
 
 ---
 
-## 🧪 Running the Automated Test Suite
+## Running the Automated Test Suite
 
 Run unit and integration tests across parser, schemas, and state graph orchestration:
 ```bash
@@ -83,7 +83,7 @@ python3 -m unittest discover tests
 
 ---
 
-## 🌐 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -104,7 +104,7 @@ curl -X POST http://localhost:8000/api/v1/review \
 
 ---
 
-## 📹 60-Second Video Walkthrough Script (Loom)
+## 60-Second Video Walkthrough Script (Loom)
 
 * **[0:00 - 0:15] The Hook & Problem:**
   > *"Every engineering team struggles with slow PR cycles and missed security flaws in code reviews. I built an autonomous Multi-Agent PR Reviewer that audits code changes with specialized domain agents in under 15 seconds."*

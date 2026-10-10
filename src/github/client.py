@@ -16,8 +16,23 @@ class GitHubReviewClient:
     """Dispatches PR review comments to GitHub REST API."""
 
     def __init__(self, token: Optional[str] = None):
-        self.token = token or settings.GITHUB_TOKEN
+        self.token = token or settings.GITHUB_TOKEN or self._get_system_gh_token()
         self.base_url = "https://api.github.com"
+
+    @staticmethod
+    def _get_system_gh_token() -> Optional[str]:
+        """Auto-detects GitHub token from the system gh CLI if authenticated."""
+        import shutil
+        import subprocess
+        gh_bin = shutil.which("gh") or os.path.expanduser("~/.local/bin/gh")
+        if os.path.exists(gh_bin) or shutil.which("gh"):
+            try:
+                res = subprocess.run([gh_bin, "auth", "token"], capture_output=True, text=True, timeout=3)
+                if res.returncode == 0 and res.stdout.strip():
+                    return res.stdout.strip()
+            except Exception:
+                pass
+        return None
 
     def fetch_pr_diff(self, owner: str, repo: str, pull_number: int) -> str:
         """
@@ -74,6 +89,7 @@ class GitHubReviewClient:
                     "additions": data.get("additions", 0),
                     "deletions": data.get("deletions", 0),
                     "changed_files": data.get("changed_files", 0),
+                    "head_sha": data.get("head", {}).get("sha"),
                 }
         except Exception:
             return {
@@ -86,38 +102,63 @@ class GitHubReviewClient:
         owner: str,
         repo: str,
         pull_number: int,
-        review_result: PRReviewResult,
+        review_result: Any,
         commit_id: Optional[str] = None,
         dry_run: bool = False
     ) -> Dict[str, Any]:
         """
         Submits an aggregated Pull Request Review containing inline line comments.
+        Tolerates both PRReviewResult objects and raw dictionaries.
         """
-        # Map review status to GitHub review event
         event_map = {
             "APPROVE": "APPROVE",
             "REQUEST_CHANGES": "REQUEST_CHANGES",
             "COMMENT": "COMMENT"
         }
-        event = event_map.get(review_result.overall_status, "COMMENT")
+        status = getattr(review_result, "overall_status", None) or (
+            review_result.get("overall_status") if isinstance(review_result, dict) else "COMMENT"
+        )
+        event = event_map.get(status, "COMMENT")
+
+        raw_comments = getattr(review_result, "comments", []) or (
+            review_result.get("comments", []) if isinstance(review_result, dict) else []
+        )
+        summary_md = getattr(review_result, "summary_markdown", "") or (
+            review_result.get("summary_markdown", "") if isinstance(review_result, dict) else ""
+        )
 
         formatted_inline_comments: List[Dict[str, Any]] = []
-        for c in review_result.comments:
+        for c in raw_comments:
+            sev = getattr(c, "severity", None) or (c.get("severity") if isinstance(c, dict) else "INFO")
+            cat = getattr(c, "category", None) or (c.get("category") if isinstance(c, dict) else "SECURITY")
+            summary = getattr(c, "issue_summary", None) or (c.get("issue_summary") if isinstance(c, dict) else "")
+            expl = getattr(c, "detailed_explanation", None) or (c.get("detailed_explanation") if isinstance(c, dict) else "")
+            fix = getattr(c, "suggested_diff_fix", None) or (c.get("suggested_diff_fix") if isinstance(c, dict) else "")
+            fpath = getattr(c, "file_path", None) or (c.get("file_path") if isinstance(c, dict) else "")
+            line_no = getattr(c, "line_number", 1) or (c.get("line_number", 1) if isinstance(c, dict) else 1)
+
             body = (
-                f"### **[{c.severity}] {c.category} Finding**\n\n"
-                f"**Issue:** {c.issue_summary}\n\n"
-                f"{c.detailed_explanation}\n\n"
+                f"### [{sev}] {cat} Finding\n\n"
+                f"**Issue:** {summary}\n\n"
+                f"{expl}\n\n"
                 f"**Suggested Remediation:**\n"
-                f"```suggestion\n{c.suggested_diff_fix}\n```"
+                f"```suggestion\n{fix}\n```"
             )
             formatted_inline_comments.append({
-                "path": c.file_path,
-                "line": c.line_number,
+                "path": fpath,
+                "line": int(line_no),
                 "body": body,
             })
 
+        if not commit_id:
+            try:
+                details = self.get_pr_details(owner, repo, pull_number)
+                commit_id = details.get("head_sha")
+            except Exception:
+                pass
+
         payload = {
-            "body": review_result.summary_markdown,
+            "body": summary_md,
             "event": event,
             "comments": formatted_inline_comments
         }
@@ -135,18 +176,52 @@ class GitHubReviewClient:
             }
 
         import urllib.request
+        import urllib.error
         url = f"{self.base_url}/repos/{owner}/{repo}/pulls/{pull_number}/reviews"
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.token}",
-                "Accept": "application/vnd.github.v3+json",
-                "Content-Type": "application/json",
-                "User-Agent": "Autonomous-PR-Reviewer-Agent"
-            },
-            method="POST"
-        )
 
-        with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+        def _do_post(p):
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(p).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {self.token}",
+                    "Accept": "application/vnd.github.v3+json",
+                    "Content-Type": "application/json",
+                    "User-Agent": "Autonomous-PR-Reviewer-Agent"
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+
+        try:
+            return _do_post(payload)
+        except urllib.error.HTTPError as err:
+            err_body = err.read().decode("utf-8", errors="ignore")
+            # 1. If self-review, change event to COMMENT
+            if err.code == 422 and payload.get("event") == "REQUEST_CHANGES":
+                payload["event"] = "COMMENT"
+                try:
+                    res = _do_post(payload)
+                    res["note"] = "Submitted as COMMENT because GitHub disallows authors requesting changes on their own PR."
+                    return res
+                except urllib.error.HTTPError as err2:
+                    err = err2
+                    err_body = err2.read().decode("utf-8", errors="ignore")
+
+            # 2. If inline comments fail placement on diff (422), fallback to summary report
+            if err.code == 422 and payload.get("comments"):
+                payload_no_comments = {
+                    "body": payload["body"],
+                    "event": payload.get("event", "COMMENT")
+                }
+                if commit_id:
+                    payload_no_comments["commit_id"] = commit_id
+                try:
+                    res = _do_post(payload_no_comments)
+                    res["note"] = "Inline comments omitted due to diff placement; summary report published."
+                    return res
+                except Exception:
+                    pass
+
+            raise ValueError(f"GitHub review submission failed ({err.code}): {err_body}")

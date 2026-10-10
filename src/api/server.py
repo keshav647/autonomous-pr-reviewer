@@ -91,7 +91,7 @@ class NativeReviewHandler(BaseHTTPRequestHandler):
         elif self.path == "/api/v1/github/fetch":
             try:
                 data = json.loads(body.decode("utf-8"))
-                repo_input = (data.get("repo") or "").strip()
+                repo_input = (data.get("repo") or data.get("pr_url") or data.get("url") or "").strip()
                 pull_number = int(data.get("pull_number", 0) or 0)
                 token = data.get("github_token") or self.headers.get("x-github-token") or None
 
@@ -146,15 +146,12 @@ class NativeReviewHandler(BaseHTTPRequestHandler):
                 dry_run = bool(data.get("dry_run", not bool(token)))
 
                 review_data = data.get("review_result", {})
-                from ..schemas.models import PRReviewResult
-                review_obj = PRReviewResult(**review_data)
-
                 client = GitHubReviewClient(token=token)
                 resp = client.post_pr_review(
                     owner=owner,
                     repo=repo,
                     pull_number=pull_number,
-                    review_result=review_obj,
+                    review_result=review_data,
                     commit_id=commit_id,
                     dry_run=dry_run
                 )
@@ -179,7 +176,8 @@ class ReusableHTTPServer(HTTPServer):
     allow_reuse_address = True
 
 def run_native_server(host: str = "0.0.0.0", port: int = 8000):
-    """Starts the native lightweight HTTP server."""
+    """Starts the native lightweight HTTP server with dual-port 8000/8080 support."""
+    import threading
     server_address = (host, port)
     try:
         httpd = ReusableHTTPServer(server_address, NativeReviewHandler)
@@ -191,8 +189,21 @@ def run_native_server(host: str = "0.0.0.0", port: int = 8000):
             port = alt_port
         else:
             raise
+
+    # Also bind secondary port so user can access both http://localhost:8000 and http://localhost:8080
+    sec_port = 8080 if port == 8000 else 8000
+    try:
+        httpd_sec = ReusableHTTPServer((host, sec_port), NativeReviewHandler)
+        t = threading.Thread(target=httpd_sec.serve_forever, daemon=True)
+        t.start()
+        sec_msg = f"  and http://localhost:{sec_port}"
+    except Exception:
+        sec_msg = ""
+
     print(f"\n[SERVER] Multi-Agent Reviewer UI & API Server running at:")
-    print(f"  \033[1m\033[36mhttp://localhost:{port}\033[0m\n")
+    print(f"  \033[1m\033[36mhttp://localhost:{port}\033[0m")
+    if sec_msg:
+        print(f"  \033[1m\033[36m{sec_msg}\033[0m\n")
     print(f"Features active: [BYOK API Key Support] [Interactive Pipeline Animation] [Zero Cloud Drain]")
     try:
         httpd.serve_forever()
