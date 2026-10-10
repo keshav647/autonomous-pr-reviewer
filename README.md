@@ -45,6 +45,14 @@ flowchart TD
 
 ---
 
+## Detailed Technical Documentation
+
+* **[System Architecture & Data Contracts](docs/ARCHITECTURE.md):** StateGraph topology, AST context mapping, conflict resolution algorithm, and state schemas.
+* **[Performance & Cost Benchmarks](docs/BENCHMARKS.md):** Multi-model latency profiles, schema reliability rates, and enterprise ROI analysis.
+* **[Video Walkthrough & Demonstration Guide](docs/WALKTHROUGH.md):** 60-second Loom demonstration script and live evaluation steps.
+
+---
+
 ## Quickstart Guide
 
 ### 1. Run with Docker (Single Command)
