@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pr-reviewer-agent"
 version = "0.1.0"
 description = "Autonomous Multi-Agent Pull Request Reviewer & Security Auditor"
-authors = [{ name = "Keshav Budhiraja" }]
+authors = [{ name = "Keshav Budhiraja", email = "keshavbudhiraja4321@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
