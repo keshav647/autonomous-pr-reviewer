@@ -44,6 +44,15 @@ class NativeReviewHandler(BaseHTTPRequestHandler):
             self.wfile.write(get_ui_html().encode("utf-8"))
             return
 
+        # 1b. Favicon
+        if self.path.split("?")[0] == "/favicon.ico":
+            logo_file = (STATIC_DIR / "logo.png").resolve()
+            if logo_file.is_file():
+                self._set_headers(200, "image/png")
+                with open(logo_file, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
         # 2. Static Assets (/static/...)
         if self.path.startswith("/static/"):
             rel_path = self.path[len("/static/"):].split("?")[0]

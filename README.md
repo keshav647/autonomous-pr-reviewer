@@ -1,9 +1,13 @@
-# Autonomous Multi-Agent Pull Request Reviewer & Security Auditor
+<div align="center">
+  <img src="src/ui/static/logo.png" alt="Autonomous Multi-Agent PR Reviewer Logo" width="140" />
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com)
-[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
+  # Autonomous Multi-Agent Pull Request Reviewer & Security Auditor
+
+  [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com)
+  [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
+</div>
 
 An autonomous, multi-agent code analysis bot that reviews GitHub Pull Requests via Webhooks. Instead of making naive, unstructured LLM calls, it coordinates a specialized team of autonomous agents using a state graph to parse git diffs, conduct AST-guided vulnerability audits, detect performance bottlenecks, and post actionable, structured Markdown inline review comments.
 

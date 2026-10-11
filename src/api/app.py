@@ -21,7 +21,7 @@ def get_ui_html() -> str:
 
 try:
     from fastapi import FastAPI
-    from fastapi.responses import HTMLResponse
+    from fastapi.responses import HTMLResponse, FileResponse
     from fastapi.staticfiles import StaticFiles
     from fastapi.middleware.cors import CORSMiddleware
 
@@ -51,6 +51,13 @@ try:
     # Static assets mounting if directory exists
     if STATIC_DIR.is_dir():
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def serve_favicon():
+        logo_path = STATIC_DIR / "logo.png"
+        if logo_path.is_file():
+            return FileResponse(str(logo_path), media_type="image/png")
+        return HTMLResponse(status_code=204)
 
     @app.get("/", response_class=HTMLResponse)
     @app.get("/ui", response_class=HTMLResponse)
