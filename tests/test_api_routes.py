@@ -64,5 +64,41 @@ class TestAPIRoutes(unittest.TestCase):
         self.assertTrue(data.get("success"))
         self.assertTrue(data.get("dry_run"))
 
+    def test_github_fetch_pr_endpoint_alias(self):
+        """Verifies that /api/v1/github/fetch-pr alias route is active and accepts split owner/repo payload."""
+        from unittest.mock import patch
+        with patch("src.github.client.GitHubReviewClient.fetch_pr_diff", return_value="diff --git a/test b/test\n+line"), \
+             patch("src.github.client.GitHubReviewClient.get_pr_details", return_value={"title": "Test PR", "author": "dev"}):
+            resp = self.client.post("/api/v1/github/fetch-pr", json={
+                "owner": "keshav647",
+                "repo": "testing",
+                "pull_number": 1
+            })
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertTrue(data.get("success"))
+            self.assertEqual(data.get("owner"), "keshav647")
+            self.assertEqual(data.get("repo"), "testing")
+            self.assertEqual(data.get("pull_number"), 1)
+            self.assertIn("diff --git", data.get("diff_text"))
+
+    def test_github_publish_review_endpoint_alias(self):
+        """Verifies that /api/v1/github/publish-review alias route is active."""
+        resp = self.client.post("/api/v1/github/publish-review", json={
+            "owner": "testowner",
+            "repo": "testrepo",
+            "pull_number": 1,
+            "review": {
+                "pull_request_id": 1,
+                "overall_status": "APPROVE",
+                "summary_markdown": "Looks good!",
+                "comments": []
+            },
+            "dry_run": True
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get("success"))
+
 if __name__ == "__main__":
     unittest.main()

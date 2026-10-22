@@ -36,6 +36,7 @@ venv.bak/
 # IDE & Editor
 .vscode/
 .idea/
+.serena/
 *.swp
 *.swo
 *~

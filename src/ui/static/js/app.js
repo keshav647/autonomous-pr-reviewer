@@ -1,53 +1,10 @@
-    // -------------------------------------------------------------
-    // 1. Ambient 3D Particle Constellation (Three.js)
-    // -------------------------------------------------------------
-    (function initThreeBackground() {
-      const canvas = document.getElementById("bg-canvas");
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-      camera.position.z = 400;
-
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-      const particleCount = 120;
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleCount * 3);
-
-      for (let i = 0; i < particleCount * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 800;
-        positions[i + 1] = (Math.random() - 0.5) * 800;
-        positions[i + 2] = (Math.random() - 0.5) * 500;
-      }
-      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-
-      const material = new THREE.PointsMaterial({
-        color: 0x58a6ff,
-        size: 2.2,
-        transparent: true,
-        opacity: 0.45
-      });
-      const points = new THREE.Points(geometry, material);
-      scene.add(points);
-
-      function animate() {
-        requestAnimationFrame(animate);
-        points.rotation.y += 0.0004;
-        points.rotation.x += 0.0002;
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    })();
+    // =============================================================
+    // SENTINEL // AUTONOMOUS AI PR REVIEWER & SECURITY AUDITOR
+    // Client-Side Intelligence & Orchestration Engine
+    // =============================================================
 
     // -------------------------------------------------------------
-    // 2. Preset Data Fixtures
+    // 1. Preset Data Fixtures
     // -------------------------------------------------------------
     const PRESETS = {
       sql_injection: {
@@ -90,11 +47,326 @@ index 9988776..1122334 100644
 +def calculate_total(subtotal: float, tax_rate: float = 0.05) -> float:
 +    """Calculates total with parameterized tax."""
 +    return round(subtotal * (1.0 + tax_rate), 2)`
-      }
-    };
+      },
+      testing_sentinel: {
+        path: "Testing SENTINEL (8 Changed Codes)",
+        diff: `diff --git a/README.md b/README.md
+index 6fd9c06..f5b00cb 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,5 @@
+-# Testing Benchmark Repository
++# Testing SENTINEL Benchmark Repository
+ 
+ Sample service repository used for automated code auditing, multi-agent code review, and CI/CD quality benchmarks.
++
++Maintained by [@keshav647](https://github.com/keshav647).
+diff --git a/models/sentinel_schemas.py b/models/sentinel_schemas.py
+new file mode 100644
+index 0000000..7481ab9
+--- /dev/null
++++ b/models/sentinel_schemas.py
+@@ -0,0 +1,22 @@
++"""Data models and telemetry schemas for Testing SENTINEL service."""
++
++from typing import Optional, List
++from pydantic import BaseModel, Field
++
++
++class SentinelAuditPayload(BaseModel):
++    """Payload schema for dispatching autonomous code audits."""
++    repo_name: str = Field(..., description="Target repository name")
++    branch: str = Field(default="main", description="Target git branch")
++    commit_sha: Optional[str] = Field(None, description="Commit hash to inspect")
++    max_severity: str = Field(default="CRITICAL", description="Minimum alert severity threshold")
++
++
++class SentinelFindingReport(BaseModel):
++    """Schema for individual audit observations."""
++    rule_id: str
++    category: str
++    severity: str
++    file_path: str
++    line_number: int
++    remediation_summary: str
+diff --git a/routes/auth_sentinel.py b/routes/auth_sentinel.py
+new file mode 100644
+index 0000000..a19db32
+--- /dev/null
++++ b/routes/auth_sentinel.py
+@@ -0,0 +1,47 @@
++"""Authentication and token verification service for Testing SENTINEL."""
++
++import hashlib
++import time
++from typing import Any, Dict, Optional
++from fastapi import APIRouter, HTTPException, Header
++
++router = APIRouter(prefix="/auth", tags=["Authentication"])
++
++# Hardcoded secret key for development testing (CWE-798)
++SENTINEL_JWT_DEV_KEY = "sentinel-auth-master-token-xyz999"
++
++
++@router.post("/login")
++def authenticate_user(credentials: Dict[str, str]) -> Dict[str, Any]:
++    """Authenticates user credentials and generates access token."""
++    username = credentials.get("username", "")
++    password = credentials.get("password", "")
++
++    if not username or not password:
++        raise HTTPException(status_code=400, detail="Missing username or password")
++
++    # Insecure hashing: MD5 used for password validation (CWE-327)
++    hashed_password = hashlib.md5(password.encode()).hexdigest()
++
++    # Dynamic SQL string formatting vulnerability (CWE-89)
++    query = f"SELECT id, username, role FROM users WHERE username = '{username}' AND password_hash = '{hashed_password}'"
++
++    return {
++        "status": "authenticated",
++        "username": username,
++        "token": SENTINEL_JWT_DEV_KEY,
++        "query_executed": query,
++    }
++
++
++@router.get("/verify")
++def verify_token(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
++    """Validates authorization bearer token."""
++    if not authorization or not authorization.startswith("Bearer "):
++        raise HTTPException(status_code=401, detail="Unauthorized")
++
++    token = authorization.split(" ")[1]
++    if token != SENTINEL_JWT_DEV_KEY:
++        raise HTTPException(status_code=403, detail="Invalid token")
++
++    return {"valid": True, "scope": "admin:sentinel"}
+diff --git a/routes/diagnostics.py b/routes/diagnostics.py
+new file mode 100644
+index 0000000..14d0521
+--- /dev/null
++++ b/routes/diagnostics.py
+@@ -0,0 +1,25 @@
++"""Diagnostics and ping utilities."""
++
++import os
++from typing import Any, Dict
++from fastapi import APIRouter
++
++router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
++
++
++@router.get("/ping")
++def ping_host(host: str) -> Dict[str, Any]:
++    """Execute host connectivity check.
++
++    WARNING: Contains raw shell interpolation vulnerable to Command Injection (CWE-78)
++    and anti-pattern bare except swallowing exceptions.
++    """
++    try:
++        # Command Injection risk: target host concatenated into shell command
++        exit_code = os.system(f"ping -c 1 {host}")
++        return {"host": host, "reachable": exit_code == 0}
++    except:
++        # Anti-pattern: bare except suppressing critical exceptions
++        pass
++
++    return {"host": host, "reachable": False}
+diff --git a/routes/users.py b/routes/users.py
+new file mode 100644
+index 0000000..8a80de1
+--- /dev/null
++++ b/routes/users.py
+@@ -0,0 +1,42 @@
++"""User management and profile lookup endpoints."""
++
++import sqlite3
++from typing import Any, Dict
++from fastapi import APIRouter, HTTPException
++
++router = APIRouter(prefix="/users", tags=["Users"])
++
++# Hardcoded authentication secret (CWE-798: Use of Hard-coded Credentials)
++JWT_SECRET = "super-secret-jwt-key-9988776655"
++
++
++@router.get("/lookup")
++def lookup_user(username: str) -> Dict[str, Any]:
++    """Look up a user account by username.
++
++    WARNING: Contains raw SQL interpolation vulnerable to SQL Injection (CWE-89)
++    and unclosed database connection causing resource leakage.
++    """
++    if not username:
++        raise HTTPException(status_code=400, detail="Username parameter is required")
++
++    # Inefficient connection handling without context manager (Resource leak)
++    conn = sqlite3.connect("users.db")
++    cursor = conn.cursor()
++
++    # Raw string formatting into SQL query (SQL Injection Vulnerability)
++    query = f"SELECT id, username, email, is_admin FROM users WHERE username = '{username}'"
++    cursor.execute(query)
++    record = cursor.fetchone()
++
++    # Notice: conn is never closed, leading to socket/file descriptor leaks
++
++    if not record:
++        raise HTTPException(status_code=404, detail="User not found")
++
++    return {
++        "id": record[0],
++        "username": record[1],
++        "email": record[2],
++        "is_admin": bool(record[3]),
++    }
+diff --git a/server.py b/server.py
+index 7512156..9cd4c57 100644
+--- a/server.py
++++ b/server.py
+@@ -1,23 +1,39 @@
+-"""Sample FastAPI application for security and quality benchmarking."""
++"""Testing SENTINEL Service: Benchmark application for automated code auditing."""
+ 
+ import os
+ from typing import Any, Dict
+ from fastapi import FastAPI, HTTPException
+ 
++from routes.users import router as users_router
++from routes.diagnostics import router as diagnostics_router
++from routes.auth_sentinel import router as auth_router
++from services.payment_gateway import router as billing_router
++from utils.file_storage import router as storage_router
++
+ app = FastAPI(
+-    title="Testing Benchmark Service",
+-    version="1.0.0",
++    title="Testing SENTINEL Service",
++    description="Multi-agent benchmarking service with security and performance test vectors",
++    version="2.0.0",
+     docs_url="/docs"
+ )
+ 
++# Register route submodules
++app.include_router(users_router)
++app.include_router(diagnostics_router)
++app.include_router(auth_router)
++app.include_router(billing_router)
++app.include_router(storage_router)
++
++
+ @app.get("/health")
+ def health_check() -> Dict[str, str]:
+     """Basic health check endpoint."""
+-    return {"status": "healthy", "service": "testing-benchmark"}
++    return {"status": "healthy", "service": "testing-sentinel"}
++
+ 
+ @app.get("/items/{item_id}")
+ def read_item(item_id: int) -> Dict[str, Any]:
+     """Retrieve sample item by ID."""
+     if item_id <= 0:
+         raise HTTPException(status_code=400, detail="Item ID must be positive integer")
+-    return {"item_id": item_id, "name": f"Verified Item #{item_id}"}
++    return {"item_id": item_id, "name": f"Verified Sentinel Item #{item_id}"}
+diff --git a/services/payment_gateway.py b/services/payment_gateway.py
+new file mode 100644
+index 0000000..07ee68a
+--- /dev/null
++++ b/services/payment_gateway.py
+@@ -0,0 +1,45 @@
++"""Payment processing and Stripe webhook integration service."""
++
++import time
++from typing import Any, Dict
++from fastapi import APIRouter, HTTPException
++
++router = APIRouter(prefix="/billing", tags=["Billing & Payments"])
++
++# Hardcoded third-party API secret (CWE-798)
++STRIPE_API_SECRET = "sec_test_stripe_hardcoded_dummy_token_9900"
++
++
++@router.post("/charge")
++async def process_transaction(payload: Dict[str, Any]) -> Dict[str, Any]:
++    """Processes customer payment charge.
++
++    Contains blocking time.sleep() inside async handler (Performance Stall)
++    and bare except suppressing payment gateway exceptions.
++    """
++    amount = payload.get("amount", 0)
++    customer_id = payload.get("customer_id")
++
++    if amount <= 0 or not customer_id:
++        raise HTTPException(status_code=400, detail="Invalid charge parameters")
++
+     try:
++        # Blocking synchronous sleep in async event loop (Blocks server thread)
++        time.sleep(2)
++
++        # Unbounded transaction loop without batching (Performance anti-pattern)
++        records = []
++        for i in range(10):
++            records.append(f"tx_rec_{customer_id}_{i}")
++
++        return {
++            "status": "succeeded",
++            "amount": amount,
++            "charge_id": f"ch_{int(time.time())}",
++            "receipts": records,
++        }
++    except:
++        # Anti-pattern: bare except suppressing Stripe connection failures
++        pass
++
++    return {"status": "failed", "error": "Gateway timeout"}
+diff --git a/utils/file_storage.py b/utils/file_storage.py
+new file mode 100644
+index 0000000..b452b89
+--- /dev/null
++++ b/utils/file_storage.py
+@@ -0,0 +1,35 @@
++"""File upload and asset retrieval utilities for Testing SENTINEL."""
++
++import os
++from typing import Any, Dict
++from fastapi import APIRouter, HTTPException
++
++router = APIRouter(prefix="/storage", tags=["Storage & Assets"])
++
++BASE_UPLOAD_DIR = "/tmp/sentinel_uploads"
++
++
++@router.post("/upload")
++def upload_file(filename: str, content: str) -> Dict[str, Any]:
++    """Saves uploaded user content to storage.
++
++    WARNING: Vulnerable to Path Traversal (CWE-22) via unvalidated filename
++    and unclosed file handles without context managers.
++    """
++    if not filename:
++        raise HTTPException(status_code=400, detail="Filename required")
++
++    # Insecure path construction allowing directory traversal (e.g. filename='../../etc/passwd')
++    target_path = os.path.join(BASE_UPLOAD_DIR, filename)
++
++    # Insecure file write without context manager (Resource leak)
++    f = open(target_path, "w")
++    f.write(content)
++    # Notice: f.close() is missing if an error occurs
++
++    return {
++        "status": "stored",
++        "file_name": filename,
++        "saved_path": target_path,
++        "bytes_written": len(content),
++    }`
+    }
+  };
 
     // -------------------------------------------------------------
-    // 3. DOM References & State
+    // 2. DOM Elements & State
     // -------------------------------------------------------------
     const settingsDialog = document.getElementById("settingsDialog");
     const openSettingsBtn = document.getElementById("openSettingsBtn");
@@ -143,11 +415,6 @@ index 9988776..1122334 100644
     const ghPublishIcon = document.getElementById("ghPublishIcon");
     const btnConfirmPublishText = document.getElementById("btnConfirmPublishText");
 
-    let currentGitHubOwner = "";
-    let currentGitHubRepo = "";
-    let currentGitHubPR = 0;
-    let lastReviewResult = null;
-
     const runAuditBtn = document.getElementById("runAuditBtn");
     const auditSpinner = document.getElementById("auditSpinner");
     const auditPlayIcon = document.getElementById("auditPlayIcon");
@@ -177,85 +444,124 @@ index 9988776..1122334 100644
     const stateSec = document.getElementById("stateSec");
     const statePerf = document.getElementById("statePerf");
     const stateArch = document.getElementById("stateArch");
+    const stateSynth = document.getElementById("stateSynth");
 
+    let currentGitHubOwner = "";
+    let currentGitHubRepo = "";
+    let currentGitHubPR = 0;
+    let lastReviewResult = null;
     let currentDiffText = PRESETS.sql_injection.diff;
     let lastSummaryMarkdown = "";
     let isCustomDiffMode = false;
 
+    let currentParsedFiles = [];
+    let activeSelectedFilePath = null; // null means all files
+
     // -------------------------------------------------------------
-    // 4. Onboarding & BYOK Vault Management
+    // 3. BYOK Vault Management
     // -------------------------------------------------------------
     function updateNavEngineUI() {
       const savedKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY") || "";
       const savedProvider = localStorage.getItem("BYOK_PROVIDER") || "gemini";
+      const robotNameLabel = document.getElementById("robotNameLabel");
+      const robotCoreEngine = document.getElementById("robotCoreEngine");
+      const diffEngineTag = document.getElementById("diffEngineTag");
 
       if (savedKey) {
-        navEngineDot.className = "status-dot";
-        if (savedProvider === "gemini") navEngineLabel.textContent = "Google Gemini (gemini-2.5-flash)";
-        else if (savedProvider === "openai") navEngineLabel.textContent = "OpenAI (GPT-4o Mini)";
-        else if (savedProvider === "anthropic") navEngineLabel.textContent = "Anthropic Claude 3.5";
-        else if (savedProvider === "groq") navEngineLabel.textContent = "Groq (Llama 3.3 70B)";
-        else if (savedProvider === "openrouter") navEngineLabel.textContent = "OpenRouter Gateway";
-        else navEngineLabel.textContent = "Auto-Detect Provider";
+        if (navEngineDot) navEngineDot.className = "status-dot";
+        let provName = "Google Gemini (gemini-2.5-flash)";
+        let botName = "GEMINI // SENTINEL-01";
+        let coreName = "ENGINE: GEMINI (BYOK)";
+        let tagText = "Google Gemini (BYOK)";
+
+        if (savedProvider === "openai" || savedKey.startsWith("sk-proj") || (savedKey.startsWith("sk-") && !savedKey.startsWith("sk-ant"))) {
+          provName = "OpenAI (GPT-4o Mini / GPT-4o)";
+          botName = "CHATGPT (GPT-4o) // SENTINEL-01";
+          coreName = "ENGINE: OPENAI (BYOK)";
+          tagText = "OpenAI GPT-4o (BYOK)";
+        } else if (savedProvider === "anthropic" || savedKey.startsWith("sk-ant")) {
+          provName = "Anthropic Claude 3.5 Sonnet";
+          botName = "CLAUDE 3.5 // SENTINEL-01";
+          coreName = "ENGINE: CLAUDE (BYOK)";
+          tagText = "Claude 3.5 Sonnet (BYOK)";
+        } else if (savedProvider === "groq" || savedKey.startsWith("gsk_")) {
+          provName = "Groq Cloud (Llama 3.3 70B)";
+          botName = "GROQ LLAMA-3 // SENTINEL-01";
+          coreName = "ENGINE: GROQ (BYOK)";
+          tagText = "Groq Llama 3.3 (BYOK)";
+        } else if (savedProvider === "openrouter" || savedKey.startsWith("sk-or")) {
+          provName = "OpenRouter Gateway";
+          botName = "OPENROUTER // SENTINEL-01";
+          coreName = "ENGINE: OPENROUTER (BYOK)";
+          tagText = "OpenRouter Gateway (BYOK)";
+        }
+
+        if (navEngineLabel) navEngineLabel.textContent = provName;
+        if (robotNameLabel) robotNameLabel.textContent = botName;
+        if (robotCoreEngine) robotCoreEngine.textContent = coreName;
+        if (diffEngineTag) diffEngineTag.textContent = tagText;
       } else {
-        navEngineDot.className = "status-dot offline";
-        navEngineLabel.textContent = "Offline AST Engine (No Key)";
+        if (navEngineDot) navEngineDot.className = "status-dot offline";
+        if (navEngineLabel) navEngineLabel.textContent = "Offline AST Engine (No Key)";
+        // Local offline mode retains user's preferred Sentinel callsign
+        if (robotNameLabel) robotNameLabel.textContent = "AI BOT // SENTINEL-01";
+        if (robotCoreEngine) robotCoreEngine.textContent = "CORE: OFFLINE AST";
+        if (diffEngineTag) diffEngineTag.textContent = "Python 3.12 AST (Offline)";
       }
     }
 
     function openModal() {
       const savedKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY") || "";
       const savedProvider = localStorage.getItem("BYOK_PROVIDER") || "gemini";
-      dialogKeyInput.value = savedKey;
-      dialogProviderSelect.value = savedProvider;
-      settingsDialog.classList.add("active");
+      if (dialogKeyInput) dialogKeyInput.value = savedKey;
+      if (dialogProviderSelect) dialogProviderSelect.value = savedProvider;
+      if (settingsDialog) settingsDialog.classList.add("active");
     }
 
     function closeModal() {
-      settingsDialog.classList.remove("active");
+      if (settingsDialog) settingsDialog.classList.remove("active");
     }
 
-    openSettingsBtn.addEventListener("click", openModal);
-    closeSettingsBtn.addEventListener("click", closeModal);
+    if (openSettingsBtn) openSettingsBtn.addEventListener("click", openModal);
+    if (closeSettingsBtn) closeSettingsBtn.addEventListener("click", closeModal);
 
-    dialogToggleEyeBtn.addEventListener("click", () => {
-      dialogKeyInput.type = dialogKeyInput.type === "password" ? "text" : "password";
-    });
+    if (dialogToggleEyeBtn && dialogKeyInput) {
+      dialogToggleEyeBtn.addEventListener("click", () => {
+        dialogKeyInput.type = dialogKeyInput.type === "password" ? "text" : "password";
+      });
+    }
 
-    btnSaveKey.addEventListener("click", () => {
-      const key = dialogKeyInput.value.trim();
-      const provider = dialogProviderSelect.value;
-      if (key) {
-        localStorage.setItem("BYOK_LLM_KEY", key);
-        localStorage.setItem("BYOK_GEMINI_KEY", key);
-        localStorage.setItem("BYOK_PROVIDER", provider);
-      } else {
+    if (btnSaveKey) {
+      btnSaveKey.addEventListener("click", () => {
+        const key = dialogKeyInput ? dialogKeyInput.value.trim() : "";
+        const provider = dialogProviderSelect ? dialogProviderSelect.value : "gemini";
+        if (key) {
+          localStorage.setItem("BYOK_LLM_KEY", key);
+          localStorage.setItem("BYOK_GEMINI_KEY", key);
+          localStorage.setItem("BYOK_PROVIDER", provider);
+        } else {
+          localStorage.removeItem("BYOK_LLM_KEY");
+          localStorage.removeItem("BYOK_GEMINI_KEY");
+        }
+        updateNavEngineUI();
+        closeModal();
+        logTerminal(`[VAULT] Intelligence Provider configured: ${provider}`, "succ");
+      });
+    }
+
+    if (btnOfflineDemo) {
+      btnOfflineDemo.addEventListener("click", () => {
         localStorage.removeItem("BYOK_LLM_KEY");
         localStorage.removeItem("BYOK_GEMINI_KEY");
-      }
-      updateNavEngineUI();
-      closeModal();
-      logTerminal(`BYOK Vault updated: ${provider} engine configured.`, "succ");
-    });
-
-    btnOfflineDemo.addEventListener("click", () => {
-      localStorage.removeItem("BYOK_LLM_KEY");
-      localStorage.removeItem("BYOK_GEMINI_KEY");
-      dialogKeyInput.value = "";
-      updateNavEngineUI();
-      closeModal();
-      logTerminal("Offline AST deterministic inspection mode enabled.", "normal");
-    });
-
-    // Landing Check: If no key is set on first visit, open modal immediately!
-    const initialKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY");
-    if (!initialKey) {
-      setTimeout(() => openModal(), 400);
+        if (dialogKeyInput) dialogKeyInput.value = "";
+        updateNavEngineUI();
+        closeModal();
+        logTerminal("[VAULT] Offline AST deterministic inspection mode enabled.", "normal");
+      });
     }
-    updateNavEngineUI();
 
     // -------------------------------------------------------------
-    // 5. Workspace Tab Switching
+    // 4. Workspace Tab Navigation
     // -------------------------------------------------------------
     document.querySelectorAll(".workspace-tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -269,7 +575,7 @@ index 9988776..1122334 100644
     });
 
     // -------------------------------------------------------------
-    // 6. Preset Selector & Blank Canvas / Custom Diff
+    // 5. Preset Selectors & Custom Diff Editor
     // -------------------------------------------------------------
     document.querySelectorAll(".preset-tab").forEach(tab => {
       if (tab.id === "toggleCustomDiffBtn" || tab.id === "btnNewBlankDiff" || tab.id === "btnOpenGitHubModal") return;
@@ -278,12 +584,14 @@ index 9988776..1122334 100644
         tab.classList.add("active");
 
         isCustomDiffMode = false;
-        rawDiffInput.style.display = "none";
-        diffCodeContainer.style.display = "block";
+        if (rawDiffInput) rawDiffInput.style.display = "none";
+        if (diffCodeContainer) diffCodeContainer.style.display = "block";
 
         const p = PRESETS[tab.dataset.preset];
-        currentDiffText = p.diff;
-        activeFilePath.textContent = p.path;
+        if (p) {
+          currentDiffText = p.diff;
+          if (activeFilePath) activeFilePath.textContent = p.path;
+        }
         currentGitHubOwner = "";
         currentGitHubRepo = "";
         currentGitHubPR = 0;
@@ -292,295 +600,746 @@ index 9988776..1122334 100644
         const ghActiveDot = document.getElementById("ghActiveDot");
         if (ghNavBtnText) ghNavBtnText.textContent = "Import GitHub PR";
         if (ghActiveDot) ghActiveDot.style.display = "none";
-        btnOpenGitHubModal.classList.remove("active");
+        if (btnOpenGitHubModal) btnOpenGitHubModal.classList.remove("active");
+
+        if (verdictBadge) verdictBadge.className = "verdict-status-badge STANDBY";
+        if (verdictText) verdictText.textContent = "Ready to Audit";
+        if (verdictHeadline) {
+          verdictHeadline.innerHTML = "Click <strong>Dispatch Robot Audit</strong> (or press <strong>&#8984; Enter</strong>) to activate parallel autonomous bot agents.";
+        }
+        if (window.setRobotAuditState) window.setRobotAuditState("standby");
+
+        const deck = document.getElementById("dashboardCriticalDeck");
+        if (deck) deck.style.display = "none";
+        const hotspots = document.getElementById("diffHeaderHotspots");
+        if (hotspots) {
+          hotspots.style.display = "none";
+          hotspots.innerHTML = "";
+        }
 
         renderInteractiveDiff(currentDiffText);
       });
     });
 
-    btnNewBlankDiff.addEventListener("click", () => {
-      document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
-      btnNewBlankDiff.classList.add("active");
+    if (btnNewBlankDiff) {
+      btnNewBlankDiff.addEventListener("click", () => {
+        document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+        btnNewBlankDiff.classList.add("active");
 
-      const ghNavBtnText = document.getElementById("ghNavBtnText");
-      const ghActiveDot = document.getElementById("ghActiveDot");
-      if (ghNavBtnText) ghNavBtnText.textContent = "Import GitHub PR";
-      if (ghActiveDot) ghActiveDot.style.display = "none";
-      btnOpenGitHubModal.classList.remove("active");
+        const ghNavBtnText = document.getElementById("ghNavBtnText");
+        const ghActiveDot = document.getElementById("ghActiveDot");
+        if (ghNavBtnText) ghNavBtnText.textContent = "Import GitHub PR";
+        if (ghActiveDot) ghActiveDot.style.display = "none";
+        if (btnOpenGitHubModal) btnOpenGitHubModal.classList.remove("active");
 
-      isCustomDiffMode = true;
-      diffCodeContainer.style.display = "none";
-      rawDiffInput.style.display = "block";
-      rawDiffInput.value = "";
-      currentDiffText = "";
-      currentGitHubOwner = "";
-      currentGitHubRepo = "";
-      currentGitHubPR = 0;
-      activeFilePath.textContent = "untitled.diff (Blank Editor Buffer)";
-      rawDiffInput.placeholder = "Paste your custom unified git diff or source code here...\n\nExample:\ndiff --git a/app.py b/app.py\n--- a/app.py\n+++ b/app.py\n@@ -1,5 +1,6 @@\n+import os\n+def run_cmd(user_arg):\n+    os.system(f'ping -c 1 {user_arg}')\n\nTip: You can also paste raw code snippets directly!\nShortcut: Press ⌘+Enter to trigger audit.";
+        isCustomDiffMode = true;
+        if (diffCodeContainer) diffCodeContainer.style.display = "none";
+        if (rawDiffInput) {
+          rawDiffInput.style.display = "block";
+          rawDiffInput.value = "";
+          rawDiffInput.placeholder = "Paste your custom unified git diff or source code here...\n\nExample:\ndiff --git a/app.py b/app.py\n--- a/app.py\n+++ b/app.py\n@@ -1,5 +1,6 @@\n+import os\n+def run_cmd(user_arg):\n+    os.system(f'ping -c 1 {user_arg}')\n\nShortcut: Press ⌘+Enter to trigger audit.";
+          rawDiffInput.focus();
+        }
+        currentDiffText = "";
+        currentGitHubOwner = "";
+        currentGitHubRepo = "";
+        currentGitHubPR = 0;
+        if (activeFilePath) activeFilePath.textContent = "untitled.diff (Blank Editor Buffer)";
 
-      // Switch to Diff tab
-      const diffTabBtn = document.querySelector('[data-tab="tab-diff"]') || document.querySelector('[data-tab="tabDiff"]');
-      if (diffTabBtn) diffTabBtn.click();
+        const diffTabBtn = document.querySelector('[data-tab="tab-diff"]');
+        if (diffTabBtn) diffTabBtn.click();
 
-      // Reset state indicators to standby
-      verdictBadge.className = "verdict-status-badge STANDBY";
-      verdictIcon.setAttribute("data-lucide", "play-circle");
-      verdictText.textContent = "Ready to Audit";
-      verdictHeadline.innerHTML = "Clean editor buffer initialized. Paste custom code and click <strong>Run Multi-Agent Audit</strong>.";
-      findingsBadge.textContent = "0 issues";
-      metricCrit.textContent = "0";
-      metricWarn.textContent = "0";
+        if (verdictBadge) verdictBadge.className = "verdict-status-badge STANDBY";
+        if (verdictText) verdictText.textContent = "Ready to Audit";
+        if (verdictHeadline) {
+          verdictHeadline.innerHTML = "Clean editor buffer initialized. Paste custom code and click <strong>Dispatch Robot Audit</strong>.";
+        }
+        if (findingsBadge) findingsBadge.textContent = "0 issues";
+        if (metricCrit) metricCrit.textContent = "0";
+        if (metricWarn) metricWarn.textContent = "0";
+        if (window.setRobotAuditState) window.setRobotAuditState("standby");
 
-      rawDiffInput.focus();
-      logTerminal("[BUFFER] Clean diff canvas ready. Awaiting custom input.", "normal");
-      lucide.createIcons();
-    });
+        logTerminal("[BUFFER] Clean diff canvas ready. Awaiting custom input.", "normal");
+      });
+    }
 
-    toggleCustomDiffBtn.addEventListener("click", () => {
-      document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
-      toggleCustomDiffBtn.classList.add("active");
+    if (toggleCustomDiffBtn) {
+      toggleCustomDiffBtn.addEventListener("click", () => {
+        document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+        toggleCustomDiffBtn.classList.add("active");
 
-      isCustomDiffMode = true;
-      diffCodeContainer.style.display = "none";
-      rawDiffInput.style.display = "block";
-      rawDiffInput.value = currentDiffText;
-      activeFilePath.textContent = "Custom Diff Input (Editor)";
+        isCustomDiffMode = true;
+        if (diffCodeContainer) diffCodeContainer.style.display = "none";
+        if (rawDiffInput) {
+          rawDiffInput.style.display = "block";
+          rawDiffInput.value = currentDiffText;
+          rawDiffInput.focus();
+        }
+        if (activeFilePath) activeFilePath.textContent = "Custom Diff Input (Editor)";
 
-      const diffTabBtn = document.querySelector('[data-tab="tab-diff"]') || document.querySelector('[data-tab="tabDiff"]');
-      if (diffTabBtn) diffTabBtn.click();
+        const diffTabBtn = document.querySelector('[data-tab="tab-diff"]');
+        if (diffTabBtn) diffTabBtn.click();
+      });
+    }
 
-      rawDiffInput.focus();
-    });
-
-    rawDiffInput.addEventListener("input", (e) => {
-      currentDiffText = e.target.value;
-    });
+    if (rawDiffInput) {
+      rawDiffInput.addEventListener("input", (e) => {
+        currentDiffText = e.target.value;
+      });
+    }
 
     // -------------------------------------------------------------
-    // 6b. GitHub Live PR Import Logic
+    // 6. GitHub Live PR Import Logic
     // -------------------------------------------------------------
     function openGitHubModal() {
-      ghFetchError.style.display = "none";
-      ghTokenInput.value = localStorage.getItem("BYOK_GITHUB_TOKEN") || "";
-      githubDialog.classList.add("active");
-      ghRepoInput.focus();
+      if (ghFetchError) ghFetchError.style.display = "none";
+      if (ghTokenInput) ghTokenInput.value = localStorage.getItem("BYOK_GITHUB_TOKEN") || "";
+      if (githubDialog) githubDialog.classList.add("active");
     }
 
     function closeGitHubModal() {
-      githubDialog.classList.remove("active");
+      if (githubDialog) githubDialog.classList.remove("active");
     }
 
-    btnOpenGitHubModal.addEventListener("click", openGitHubModal);
-    closeGitHubBtn.addEventListener("click", closeGitHubModal);
-    btnCancelGitHub.addEventListener("click", closeGitHubModal);
+    if (btnOpenGitHubModal) btnOpenGitHubModal.addEventListener("click", openGitHubModal);
+    if (closeGitHubBtn) closeGitHubBtn.addEventListener("click", closeGitHubModal);
+    if (btnCancelGitHub) btnCancelGitHub.addEventListener("click", closeGitHubModal);
 
-    ghToggleTokenEyeBtn.addEventListener("click", () => {
-      ghTokenInput.type = ghTokenInput.type === "password" ? "text" : "password";
-    });
+    if (ghToggleTokenEyeBtn && ghTokenInput) {
+      ghToggleTokenEyeBtn.addEventListener("click", () => {
+        ghTokenInput.type = ghTokenInput.type === "password" ? "text" : "password";
+      });
+    }
 
-    // Auto-parse full GitHub PR URLs pasted into repo input
-    ghRepoInput.addEventListener("input", () => {
-      const val = ghRepoInput.value.trim();
-      if (val.includes("github.com/")) {
-        const m = val.match(/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)/);
-        if (m) {
-          ghRepoInput.value = `${m[1]}/${m[2]}`;
-          ghPrNumberInput.value = m[3];
-        }
-      }
-    });
-
-    // Quick demo PR chips
     document.querySelectorAll(".btn-chip").forEach(chip => {
       chip.addEventListener("click", () => {
-        ghRepoInput.value = chip.dataset.repo;
-        ghPrNumberInput.value = chip.dataset.pr;
-        fetchLiveGitHubPR();
+        if (ghRepoInput) ghRepoInput.value = chip.dataset.repo;
+        if (ghPrNumberInput) ghPrNumberInput.value = chip.dataset.pr;
       });
     });
 
-    async function fetchLiveGitHubPR() {
-      const repo = ghRepoInput.value.trim();
-      const prNumber = parseInt(ghPrNumberInput.value, 10);
-      const token = ghTokenInput.value.trim();
+    if (btnSubmitGitHubFetch) {
+      btnSubmitGitHubFetch.addEventListener("click", async () => {
+        let repoRaw = ghRepoInput ? ghRepoInput.value.trim() : "";
+        let prNum = ghPrNumberInput ? parseInt(ghPrNumberInput.value.trim(), 10) : NaN;
+        const token = ghTokenInput ? ghTokenInput.value.trim() : "";
 
-      if (!repo || !prNumber) {
-        ghFetchError.textContent = "Please specify both repository ('owner/repo') and PR number.";
-        ghFetchError.style.display = "block";
+        if (token) localStorage.setItem("BYOK_GITHUB_TOKEN", token);
+
+        const urlMatch = repoRaw.match(/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)/i);
+        if (urlMatch) {
+          repoRaw = `${urlMatch[1]}/${urlMatch[2]}`;
+          prNum = parseInt(urlMatch[3], 10);
+        }
+
+        if (!repoRaw || isNaN(prNum)) {
+          if (ghFetchError) {
+            ghFetchError.textContent = "Please enter a repository (owner/repo) and valid Pull Request number.";
+            ghFetchError.style.display = "block";
+          }
+          return;
+        }
+
+        const parts = repoRaw.split("/");
+        if (parts.length < 2) {
+          if (ghFetchError) {
+            ghFetchError.textContent = "Invalid format. Use 'owner/repo' (e.g. 'pallets/flask').";
+            ghFetchError.style.display = "block";
+          }
+          return;
+        }
+
+        const owner = parts[0].trim();
+        const repo = parts[1].trim();
+
+        if (ghFetchSpinner) ghFetchSpinner.style.display = "inline-block";
+        if (ghFetchIcon) ghFetchIcon.style.display = "none";
+        if (ghFetchBtnText) ghFetchBtnText.textContent = "Fetching PR...";
+        if (btnSubmitGitHubFetch) btnSubmitGitHubFetch.disabled = true;
+        if (ghFetchError) ghFetchError.style.display = "none";
+
+        try {
+          const resp = await fetch("/api/v1/github/fetch-pr", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              owner,
+              repo,
+              repo_input: `${owner}/${repo}`,
+              pull_number: prNum,
+              token: token || undefined,
+              github_token: token || undefined
+            })
+          });
+
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.detail || "Failed to fetch GitHub PR");
+
+          currentGitHubOwner = data.owner;
+          currentGitHubRepo = data.repo;
+          currentGitHubPR = data.pull_number;
+          currentDiffText = data.diff_text;
+
+          document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
+          if (btnOpenGitHubModal) btnOpenGitHubModal.classList.add("active");
+
+          const ghNavBtnText = document.getElementById("ghNavBtnText");
+          const ghActiveDot = document.getElementById("ghActiveDot");
+          if (ghNavBtnText) ghNavBtnText.textContent = `${owner}/${repo} #${prNum}`;
+          if (ghActiveDot) ghActiveDot.style.display = "inline-block";
+
+          if (activeFilePath) activeFilePath.textContent = `${owner}/${repo} PR #${prNum} (${data.title || "Live Pull Request"})`;
+
+          isCustomDiffMode = false;
+          if (rawDiffInput) rawDiffInput.style.display = "none";
+          if (diffCodeContainer) diffCodeContainer.style.display = "block";
+
+          const diffTabBtn = document.querySelector('[data-tab="tab-diff"]');
+          if (diffTabBtn) diffTabBtn.click();
+
+          if (verdictBadge) verdictBadge.className = "verdict-status-badge STANDBY";
+          if (verdictText) verdictText.textContent = "Ready to Audit";
+          if (verdictHeadline) {
+            verdictHeadline.innerHTML = `Loaded live GitHub PR: <strong>${owner}/${repo} #${prNum}</strong>. Click <strong>Dispatch Robot Audit</strong>.`;
+          }
+          if (window.setRobotAuditState) window.setRobotAuditState("standby");
+
+          closeGitHubModal();
+          renderInteractiveDiff(currentDiffText);
+          logTerminal(`[GITHUB] Successfully fetched live PR #${prNum} from ${owner}/${repo} (${(data.files_changed || []).length} files modified).`, "succ");
+
+        } catch (err) {
+          if (ghFetchError) {
+            ghFetchError.textContent = `Fetch error: ${err.message}`;
+            ghFetchError.style.display = "block";
+          }
+        } finally {
+          if (ghFetchSpinner) ghFetchSpinner.style.display = "none";
+          if (ghFetchIcon) ghFetchIcon.style.display = "inline-block";
+          if (ghFetchBtnText) ghFetchBtnText.textContent = "Fetch Live PR";
+          if (btnSubmitGitHubFetch) btnSubmitGitHubFetch.disabled = false;
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // 7. GitHub Publish Review Logic
+    // -------------------------------------------------------------
+    if (btnPublishGitHub) {
+      btnPublishGitHub.addEventListener("click", () => {
+        if (!currentGitHubOwner || !currentGitHubRepo || !currentGitHubPR) {
+          if (ghPublishTarget) ghPublishTarget.textContent = "Local Session (Simulated Dry-Run)";
+        } else {
+          if (ghPublishTarget) ghPublishTarget.textContent = `${currentGitHubOwner}/${currentGitHubRepo} #${currentGitHubPR}`;
+        }
+
+        if (ghPublishVerdict) {
+          ghPublishVerdict.textContent = lastReviewResult ? lastReviewResult.overall_status : "STANDBY";
+          ghPublishVerdict.style.color = (lastReviewResult && lastReviewResult.overall_status === "APPROVE") ? "var(--success)" : "var(--danger)";
+        }
+        if (ghPublishCommentsCount) {
+          const count = lastReviewResult && lastReviewResult.comments ? lastReviewResult.comments.length : 0;
+          ghPublishCommentsCount.textContent = `${count} comment${count === 1 ? '' : 's'}`;
+        }
+        if (ghPublishTokenInput) ghPublishTokenInput.value = localStorage.getItem("BYOK_GITHUB_TOKEN") || "";
+        if (ghPublishStatusMsg) ghPublishStatusMsg.style.display = "none";
+        if (githubPublishDialog) githubPublishDialog.classList.add("active");
+      });
+    }
+
+    if (closeGHPublishBtn) closeGHPublishBtn.addEventListener("click", () => githubPublishDialog && githubPublishDialog.classList.remove("active"));
+    if (btnCancelGHPublish) btnCancelGHPublish.addEventListener("click", () => githubPublishDialog && githubPublishDialog.classList.remove("active"));
+
+    if (btnConfirmPublish) {
+      btnConfirmPublish.addEventListener("click", async () => {
+        const token = ghPublishTokenInput ? ghPublishTokenInput.value.trim() : "";
+        if (token) localStorage.setItem("BYOK_GITHUB_TOKEN", token);
+
+        if (ghPublishSpinner) ghPublishSpinner.style.display = "inline-block";
+        if (ghPublishIcon) ghPublishIcon.style.display = "none";
+        if (btnConfirmPublishText) btnConfirmPublishText.textContent = "Publishing Review...";
+        if (btnConfirmPublish) btnConfirmPublish.disabled = true;
+
+        try {
+          const isReal = Boolean(currentGitHubOwner && currentGitHubRepo && currentGitHubPR && token);
+
+          if (isReal) {
+            const resp = await fetch("/api/v1/github/publish-review", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                owner: currentGitHubOwner,
+                repo: currentGitHubRepo,
+                pull_number: currentGitHubPR,
+                token: token,
+                github_token: token,
+                review: lastReviewResult,
+                review_result: lastReviewResult
+              })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || "Publish failed");
+
+            if (ghPublishStatusMsg) {
+              ghPublishStatusMsg.style.display = "block";
+              ghPublishStatusMsg.style.background = "rgba(16, 185, 129, 0.15)";
+              ghPublishStatusMsg.style.color = "#34d399";
+              ghPublishStatusMsg.textContent = `Review published to ${currentGitHubOwner}/${currentGitHubRepo}#${currentGitHubPR}!`;
+            }
+            logTerminal(`[GITHUB] Review submitted to PR #${currentGitHubPR}. Status: ${data.status}`, "succ");
+          } else {
+            if (ghPublishStatusMsg) {
+              ghPublishStatusMsg.style.display = "block";
+              ghPublishStatusMsg.style.background = "rgba(245, 158, 11, 0.15)";
+              ghPublishStatusMsg.style.color = "#fbbf24";
+              ghPublishStatusMsg.textContent = "Simulated Dry-Run: Review formatted and verified locally.";
+            }
+            logTerminal("[GITHUB] Dry-run simulated review formatted and validated.", "succ");
+          }
+        } catch (err) {
+          if (ghPublishStatusMsg) {
+            ghPublishStatusMsg.style.display = "block";
+            ghPublishStatusMsg.style.background = "rgba(239, 68, 68, 0.15)";
+            ghPublishStatusMsg.style.color = "#f87171";
+            ghPublishStatusMsg.textContent = `Publish failed: ${err.message}`;
+          }
+        } finally {
+          if (ghPublishSpinner) ghPublishSpinner.style.display = "none";
+          if (ghPublishIcon) ghPublishIcon.style.display = "inline-block";
+          if (btnConfirmPublishText) btnConfirmPublishText.textContent = "Submit Review";
+          if (btnConfirmPublish) btnConfirmPublish.disabled = false;
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // 8. Terminal Logging System
+    // -------------------------------------------------------------
+    function logTerminal(message, type = "normal") {
+      if (!terminalFeed) return;
+      const now = new Date();
+      const timeStr = [now.getHours(), now.getMinutes(), now.getSeconds()]
+        .map(v => String(v).padStart(2, "0"))
+        .join(":");
+
+      const row = document.createElement("div");
+      row.className = "t-row";
+
+      let tagSpan = "";
+      if (type === "sec") tagSpan = `<span class="t-tag-sec">[BOT-SEC]</span> `;
+      else if (type === "perf") tagSpan = `<span class="t-tag-perf">[BOT-PERF]</span> `;
+      else if (type === "arch") tagSpan = `<span class="t-tag-arch">[BOT-ARCH]</span> `;
+      else if (type === "succ") tagSpan = `<span class="t-tag-succ">[CONSENSUS]</span> `;
+
+      row.innerHTML = `<span class="t-time">${timeStr}</span> <span>${tagSpan}${message}</span>`;
+      terminalFeed.appendChild(row);
+      terminalFeed.scrollTop = terminalFeed.scrollHeight;
+    }
+
+    // -------------------------------------------------------------
+    // 8.5 Multi-Code / Multi-File Splitter & Navigator
+    // -------------------------------------------------------------
+    function parseDiffIntoFiles(diffText) {
+      if (!diffText || !diffText.trim()) return [];
+      const files = [];
+      const lines = diffText.split("\n");
+      let currentFile = null;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.startsWith("diff --git ")) {
+          if (currentFile) {
+            currentFile.rawDiff = currentFile.lines.join("\n");
+            files.push(currentFile);
+          }
+          const parts = line.split(" ");
+          const bPath = parts[parts.length - 1].replace(/^b\//, "").trim();
+          currentFile = {
+            path: bPath,
+            lines: [line],
+            additions: 0,
+            deletions: 0
+          };
+        } else {
+          if (!currentFile) {
+            currentFile = {
+              path: "code.py",
+              lines: [line],
+              additions: 0,
+              deletions: 0
+            };
+          } else {
+            currentFile.lines.push(line);
+          }
+          if (line.startsWith("+") && !line.startsWith("+++")) currentFile.additions++;
+          else if (line.startsWith("-") && !line.startsWith("---")) currentFile.deletions++;
+        }
+      }
+
+      if (currentFile) {
+        currentFile.rawDiff = currentFile.lines.join("\n");
+        files.push(currentFile);
+      }
+
+      return files;
+    }
+
+    function setupFileSelector(diffText, inlineComments = []) {
+      currentParsedFiles = parseDiffIntoFiles(diffText);
+      const fileSelectorBar = document.getElementById("fileSelectorBar");
+      const filePillsList = document.getElementById("filePillsList");
+      const diffFilesCountBadge = document.getElementById("diffFilesCountBadge");
+      const fileFilterSummary = document.getElementById("fileFilterSummary");
+
+      if (!fileSelectorBar || !filePillsList) return;
+
+      if (currentParsedFiles.length <= 1) {
+        fileSelectorBar.style.display = "none";
+        if (diffFilesCountBadge) diffFilesCountBadge.style.display = "none";
+        activeSelectedFilePath = null;
         return;
       }
 
-      ghFetchError.style.display = "none";
-      btnSubmitGitHubFetch.disabled = true;
-      ghFetchSpinner.style.display = "inline-block";
-      ghFetchIcon.style.display = "none";
-      ghFetchBtnText.textContent = "Fetching...";
+      fileSelectorBar.style.display = "flex";
+      if (diffFilesCountBadge) {
+        diffFilesCountBadge.style.display = "inline-block";
+        diffFilesCountBadge.textContent = `${currentParsedFiles.length} Codes Detected`;
+      }
 
-      try {
-        const resp = await fetch("/api/v1/github/fetch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            repo: repo,
-            pull_number: prNumber,
-            github_token: token || undefined
-          })
+      filePillsList.innerHTML = "";
+
+      // 1. "All Codes (Full PR)" button
+      const totalCrits = (inlineComments || []).filter(c => c.severity === "CRITICAL").length;
+      const allBtn = document.createElement("button");
+      allBtn.type = "button";
+      allBtn.className = `file-pill-btn ${activeSelectedFilePath === null ? "active" : ""}`;
+      allBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>All Codes (${currentParsedFiles.length})</span>
+        ${totalCrits > 0 ? `<span class="pill-crit-badge"><span class="pill-crit-dot"></span>${totalCrits} CRIT</span>` : ''}
+      `;
+      allBtn.addEventListener("click", () => {
+        activeSelectedFilePath = null;
+        setupFileSelector(diffText, inlineComments);
+        renderInteractiveDiff(diffText, inlineComments, false);
+        if (activeFilePath) {
+          activeFilePath.textContent = currentGitHubRepo 
+            ? `${currentGitHubOwner}/${currentGitHubRepo} (All ${currentParsedFiles.length} files)` 
+            : `Repository Combined View (${currentParsedFiles.length} files)`;
+        }
+      });
+      filePillsList.appendChild(allBtn);
+
+      // 2. Individual Code Pills
+      currentParsedFiles.forEach(file => {
+        const fileComments = (inlineComments || []).filter(c => !c.file_path || c.file_path.includes(file.path) || file.path.includes(c.file_path));
+        const fileCrits = fileComments.filter(c => c.severity === "CRITICAL").length;
+        file.criticalCount = fileCrits;
+
+        const pill = document.createElement("button");
+        pill.type = "button";
+        const isActive = activeSelectedFilePath === file.path;
+        pill.className = `file-pill-btn ${isActive ? "active" : ""}`;
+        const filenameOnly = file.path.split("/").pop();
+        pill.title = file.path;
+        pill.innerHTML = `
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span>${filenameOnly}</span>
+          <span class="stat-add">+${file.additions}</span>
+          <span class="stat-del">-${file.deletions}</span>
+          ${fileCrits > 0 ? `<span class="pill-crit-badge"><span class="pill-crit-dot"></span>${fileCrits} CRIT</span>` : ''}
+        `;
+        pill.addEventListener("click", () => {
+          activeSelectedFilePath = file.path;
+          setupFileSelector(diffText, inlineComments);
+          renderInteractiveDiff(file.rawDiff, fileComments, false);
+          if (activeFilePath) activeFilePath.textContent = file.path;
         });
+        filePillsList.appendChild(pill);
+      });
 
-        const data = await resp.json();
-        if (!data.success) {
-          throw new Error(data.error || "Failed to fetch PR diff from GitHub.");
-        }
-
-        if (token) {
-          localStorage.setItem("BYOK_GITHUB_TOKEN", token);
-        }
-
-        currentGitHubOwner = data.owner;
-        currentGitHubRepo = data.repo;
-        currentGitHubPR = data.pull_number;
-        currentDiffText = data.diff_text;
-
-        // Update UI state
-        document.querySelectorAll(".preset-tab").forEach(t => t.classList.remove("active"));
-        btnOpenGitHubModal.classList.add("active");
-        const ghNavBtnText = document.getElementById("ghNavBtnText");
-        const ghActiveDot = document.getElementById("ghActiveDot");
-        if (ghNavBtnText) ghNavBtnText.textContent = `${data.owner}/${data.repo} #${data.pull_number}`;
-        if (ghActiveDot) ghActiveDot.style.display = "inline-block";
-
-        isCustomDiffMode = false;
-        rawDiffInput.style.display = "none";
-        diffCodeContainer.style.display = "block";
-
-        activeFilePath.textContent = `${data.title} (${data.owner}/${data.repo} #${data.pull_number})`;
-        renderInteractiveDiff(currentDiffText);
-
-        // Switch to Diff tab
-        const diffTabBtn = document.querySelector('[data-tab="tab-diff"]') || document.querySelector('[data-tab="tabDiff"]');
-        if (diffTabBtn) diffTabBtn.click();
-
-        // Reset Verdict HUD
-        verdictBadge.className = "verdict-status-badge STANDBY";
-        verdictIcon.setAttribute("data-lucide", "play-circle");
-        verdictText.textContent = "Ready to Audit";
-        verdictHeadline.innerHTML = `Loaded live GitHub PR: <strong>${data.owner}/${data.repo} #${data.pull_number}</strong>. Click <strong>Run Multi-Agent Audit</strong>.`;
-        findingsBadge.textContent = "Ready";
-
-        closeGitHubModal();
-        logTerminal(`[GITHUB] Imported PR #${data.pull_number} from ${data.owner}/${data.repo} (${data.lines_count} diff lines).`, "succ");
-        lucide.createIcons();
-
-      } catch (err) {
-        ghFetchError.textContent = err.message;
-        ghFetchError.style.display = "block";
-      } finally {
-        btnSubmitGitHubFetch.disabled = false;
-        ghFetchSpinner.style.display = "none";
-        ghFetchIcon.style.display = "inline-block";
-        ghFetchBtnText.textContent = "Fetch Live PR";
+      if (fileFilterSummary) {
+        fileFilterSummary.textContent = activeSelectedFilePath 
+          ? `Inspecting: ${activeSelectedFilePath}` 
+          : `Showing unified patch of all ${currentParsedFiles.length} codes`;
       }
     }
 
-    btnSubmitGitHubFetch.addEventListener("click", fetchLiveGitHubPR);
-
     // -------------------------------------------------------------
-    // 6c. GitHub Publish Review Logic
+    // 9. Interactive Diff Renderer with Inline Findings
     // -------------------------------------------------------------
-    function openPublishDialog() {
-      if (!lastReviewResult) return;
-      ghPublishStatusMsg.style.display = "none";
-      ghPublishTarget.textContent = currentGitHubOwner ? `${currentGitHubOwner}/${currentGitHubRepo} #${currentGitHubPR}` : "Workspace Review #42 (Demo)";
-      ghPublishVerdict.textContent = lastReviewResult.overall_status;
-      ghPublishVerdict.style.color = lastReviewResult.overall_status === "APPROVE" ? "var(--success)" : "var(--danger)";
-      const count = (lastReviewResult.comments || []).length;
-      ghPublishCommentsCount.textContent = `${count} inline line comment${count === 1 ? '' : 's'}`;
+    function renderInteractiveDiff(diffText, inlineComments = [], shouldUpdateSelector = true) {
+      if (!diffCodeContainer) return;
+      diffCodeContainer.innerHTML = "";
 
-      ghPublishTokenInput.value = localStorage.getItem("BYOK_GITHUB_TOKEN") || "";
-      githubPublishDialog.classList.add("active");
-    }
+      if (shouldUpdateSelector) {
+        setupFileSelector(diffText, inlineComments);
+      }
 
-    function closePublishDialog() {
-      githubPublishDialog.classList.remove("active");
-    }
+      const lines = (diffText || "").split("\n");
+      let currentOldLine = 0;
+      let currentNewLine = 0;
+      let currentFileInDiff = "";
 
-    btnPublishGitHub.addEventListener("click", openPublishDialog);
-    closeGHPublishBtn.addEventListener("click", closePublishDialog);
-    btnCancelGHPublish.addEventListener("click", closePublishDialog);
-
-    btnConfirmPublish.addEventListener("click", async () => {
-      const token = ghPublishTokenInput.value.trim();
-      const dryRun = !Boolean(token);
-
-      btnConfirmPublish.disabled = true;
-      ghPublishSpinner.style.display = "inline-block";
-      ghPublishIcon.style.display = "none";
-      btnConfirmPublishText.textContent = "Publishing...";
-
-      try {
-        const resp = await fetch("/api/v1/github/publish", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            owner: currentGitHubOwner || "demo",
-            repo: currentGitHubRepo || "repo",
-            pull_number: currentGitHubPR || 42,
-            review_result: lastReviewResult,
-            github_token: token || undefined,
-            dry_run: dryRun
-          })
-        });
-
-        const data = await resp.json();
-        if (!data.success) {
-          throw new Error(data.error || "Failed to publish review to GitHub.");
+      lines.forEach((line) => {
+        if (line.startsWith("diff --git ")) {
+          const parts = line.split(" ");
+          currentFileInDiff = parts[parts.length - 1].replace(/^b\//, "").trim();
         }
 
-        if (token) {
-          localStorage.setItem("BYOK_GITHUB_TOKEN", token);
+        const row = document.createElement("div");
+        row.className = "diff-row";
+
+        if (line.startsWith("@@")) {
+          row.classList.add("hunk");
+          const match = line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+          if (match) {
+            currentOldLine = parseInt(match[1], 10);
+            currentNewLine = parseInt(match[2], 10);
+          }
+          row.innerHTML = `
+            <div class="diff-gutter">...</div>
+            <div class="diff-symbol">&bull;</div>
+            <div class="diff-content">${escapeHtml(line)}</div>
+          `;
+          diffCodeContainer.appendChild(row);
+          return;
         }
 
-        ghPublishStatusMsg.style.display = "block";
-        if (data.dry_run) {
-          ghPublishStatusMsg.style.background = "rgba(210, 153, 34, 0.1)";
-          ghPublishStatusMsg.style.border = "1px solid rgba(210, 153, 34, 0.3)";
-          ghPublishStatusMsg.style.color = "var(--warning)";
-          ghPublishStatusMsg.innerHTML = `<strong>Dry-Run Simulated:</strong> Review formatted with ${(lastReviewResult.comments || []).length} inline suggestion comments. Provide a GitHub Token to post live.`;
-          logTerminal(`[GITHUB DRY-RUN] Review payload formatted for ${currentGitHubOwner || 'demo'}/${currentGitHubRepo || 'repo'} #${currentGitHubPR || 42}. Dispatched 0 network requests.`, "normal");
+        let symbol = "&nbsp;";
+        let lineNumberDisplay = "";
+        let isAddition = false;
+
+        if (line.startsWith("+") && !line.startsWith("+++")) {
+          row.classList.add("add");
+          symbol = "+";
+          lineNumberDisplay = String(currentNewLine);
+          isAddition = true;
+          currentNewLine++;
+        } else if (line.startsWith("-") && !line.startsWith("---")) {
+          row.classList.add("del");
+          symbol = "-";
+          lineNumberDisplay = String(currentOldLine);
+          currentOldLine++;
         } else {
-          ghPublishStatusMsg.style.background = "rgba(63, 185, 80, 0.1)";
-          ghPublishStatusMsg.style.border = "1px solid rgba(63, 185, 80, 0.3)";
-          ghPublishStatusMsg.style.color = "var(--success)";
-          ghPublishStatusMsg.innerHTML = `<strong>Published Live:</strong> Review comments successfully submitted to GitHub PR #${currentGitHubPR}!`;
-          logTerminal(`[GITHUB LIVE] Published review to ${currentGitHubOwner}/${currentGitHubRepo} #${currentGitHubPR} successfully!`, "succ");
+          lineNumberDisplay = currentNewLine ? String(currentNewLine) : "";
+          if (currentOldLine) currentOldLine++;
+          if (currentNewLine) currentNewLine++;
         }
 
-        btnPublishGitHubText.textContent = data.dry_run ? "Simulated" : "Published";
-        setTimeout(() => {
-          btnPublishGitHubText.textContent = "Publish to GitHub";
-          closePublishDialog();
-        }, 2200);
+        if (lineNumberDisplay) {
+          row.dataset.line = lineNumberDisplay;
+          if (currentFileInDiff) row.dataset.file = currentFileInDiff;
+        }
 
-      } catch (err) {
-        ghPublishStatusMsg.style.display = "block";
-        ghPublishStatusMsg.style.background = "rgba(248, 81, 73, 0.1)";
-        ghPublishStatusMsg.style.border = "1px solid rgba(248, 81, 73, 0.3)";
-        ghPublishStatusMsg.style.color = "var(--danger)";
-        ghPublishStatusMsg.textContent = err.message;
-      } finally {
-        btnConfirmPublish.disabled = false;
-        ghPublishSpinner.style.display = "none";
-        ghPublishIcon.style.display = "inline-block";
-        btnConfirmPublishText.textContent = "Submit Review";
+        // Check if line has a critical issue
+        const targetLineNum = parseInt(lineNumberDisplay, 10);
+        const hasCrit = isAddition && inlineComments && inlineComments.some(c => {
+          if (c.severity !== "CRITICAL" || c.line_number !== targetLineNum) return false;
+          if (!c.file_path || !currentFileInDiff) return true;
+          return currentFileInDiff.includes(c.file_path) || c.file_path.includes(currentFileInDiff);
+        });
+        if (hasCrit) {
+          row.classList.add("has-critical-error");
+        }
+
+        row.innerHTML = `
+          <div class="diff-gutter">${lineNumberDisplay}</div>
+          <div class="diff-symbol">${hasCrit ? "!" : symbol}</div>
+          <div class="diff-content">${escapeHtml(line)}</div>
+        `;
+        diffCodeContainer.appendChild(row);
+
+        // Render inline findings below line if matched
+        if (isAddition && inlineComments && inlineComments.length) {
+          const matchedComments = inlineComments.filter(c => {
+            if (c.line_number !== targetLineNum) return false;
+            if (!c.file_path || !currentFileInDiff) return true;
+            return currentFileInDiff.includes(c.file_path) || c.file_path.includes(currentFileInDiff);
+          });
+
+          matchedComments.forEach(c => {
+            const commentRow = document.createElement("div");
+            commentRow.className = `inline-comment-row ${c.severity}`;
+            commentRow.innerHTML = `
+              <div class="comment-header">
+                <span class="severity-pill ${c.severity}">${c.severity}</span>
+                <span class="comment-category">[${c.category}]</span>
+              </div>
+              <div class="comment-summary">${escapeHtml(c.issue_summary)}</div>
+              <div class="comment-explanation">${escapeHtml(c.detailed_explanation || c.explanation || "")}</div>
+              ${c.suggested_diff_fix || c.suggested_fix ? `
+                <div class="fix-container">
+                  <div class="fix-header">Suggested Remediation:</div>
+                  <pre class="fix-code"><code>${escapeHtml(c.suggested_diff_fix || c.suggested_fix)}</code></pre>
+                </div>
+              ` : ""}
+            `;
+            diffCodeContainer.appendChild(commentRow);
+          });
+        }
+      });
+
+      // Update Critical Line Hotspots in Diff Header Bar (filling the wide space)
+      updateDiffHeaderHotspots(inlineComments, activeSelectedFilePath);
+    }
+
+    // -------------------------------------------------------------
+    // 9.5 Critical Lines Hotspots & Jump Controller
+    // -------------------------------------------------------------
+    function updateDiffHeaderHotspots(comments, currentViewingFile) {
+      const container = document.getElementById("diffHeaderHotspots");
+      if (!container) return;
+
+      if (!comments || !comments.length) {
+        container.style.display = "none";
+        container.innerHTML = "";
+        return;
       }
-    });
 
-    // -------------------------------------------------------------
-    // 7. Interactive Diff Parser & Inline Comment Injector
-    // -------------------------------------------------------------
+      let relevant = comments;
+      if (currentViewingFile) {
+        relevant = comments.filter(c => !c.file_path || c.file_path.includes(currentViewingFile) || currentViewingFile.includes(c.file_path));
+      }
+
+      const crits = relevant.filter(c => c.severity === "CRITICAL");
+      const warns = relevant.filter(c => c.severity === "WARNING");
+
+      if (crits.length === 0 && warns.length === 0) {
+        container.style.display = "none";
+        container.innerHTML = "";
+        return;
+      }
+
+      container.style.display = "flex";
+      container.innerHTML = "";
+
+      const badge = document.createElement("div");
+      badge.className = "hotspot-badge";
+      badge.innerHTML = `<span class="hotspot-pulse-dot"></span><span>${crits.length ? `CRITICAL LINES (${crits.length}):` : `WARNINGS (${warns.length}):`}</span>`;
+      container.appendChild(badge);
+
+      crits.forEach(c => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "hotspot-chip";
+        const shortTitle = c.issue_summary.length > 28 ? c.issue_summary.substring(0, 26) + "..." : c.issue_summary;
+        btn.title = `Line ${c.line_number}: ${c.issue_summary} (Click to jump to line)`;
+        btn.innerHTML = `
+          <span class="chip-line-tag">L.${c.line_number}</span>
+          <span>${escapeHtml(shortTitle)}</span>
+          <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+        `;
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          jumpToFindingLine(c.line_number, c.file_path || "");
+        });
+        container.appendChild(btn);
+      });
+
+      warns.slice(0, 2).forEach(w => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "hotspot-chip warning";
+        const shortTitle = w.issue_summary.length > 24 ? w.issue_summary.substring(0, 22) + "..." : w.issue_summary;
+        btn.title = `Line ${w.line_number}: ${w.issue_summary} (Click to jump to line)`;
+        btn.innerHTML = `
+          <span class="chip-line-tag">L.${w.line_number}</span>
+          <span>${escapeHtml(shortTitle)}</span>
+          <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+        `;
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          jumpToFindingLine(w.line_number, w.file_path || "");
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function updateDashboardCriticalDeck(comments) {
+      const deck = document.getElementById("dashboardCriticalDeck");
+      const grid = document.getElementById("dashboardCriticalCardsGrid");
+      const countLabel = document.getElementById("dashboardCriticalCountLabel");
+      if (!deck || !grid) return;
+
+      const criticals = (comments || []).filter(c => c.severity === "CRITICAL");
+      if (criticals.length === 0) {
+        deck.style.display = "flex";
+        if (countLabel) countLabel.textContent = "Zero Critical Vulnerabilities Detected";
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px; color: #a7f3d0; font-family: var(--font-mono); font-size: 0.76rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#10b981" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>CLEAN AUDIT VERIFICATION:</strong> No blocking security vulnerabilities, code injection risks, or resource leaks detected across inspected files.</span>
+          </div>
+        `;
+        return;
+      }
+
+      deck.style.display = "flex";
+      if (countLabel) {
+        countLabel.textContent = `${criticals.length} Critical Issue${criticals.length === 1 ? '' : 's'} Flagged Across Inspected Code`;
+      }
+
+      grid.innerHTML = "";
+      criticals.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "crit-card";
+        const fullFilePath = c.file_path || "";
+        const cleanFix = (c.suggested_diff_fix || c.suggested_fix || "").trim().split("\n")[0] || "";
+        
+        card.innerHTML = `
+          <div class="crit-card-top">
+            <div class="crit-card-loc">
+              <span class="crit-card-line-badge">LINE ${c.line_number}</span>
+              <span title="${fullFilePath}">${c.file_path || "Unified Patch"}</span>
+            </div>
+            <span class="crit-card-action">Jump to Line &rarr;</span>
+          </div>
+          <div class="crit-card-rule">[${c.category}] ${escapeHtml(c.issue_summary)}</div>
+          ${cleanFix ? `<div class="crit-card-code-preview" title="${escapeHtml(cleanFix)}">Fix: ${escapeHtml(cleanFix)}</div>` : ''}
+        `;
+
+        card.addEventListener("click", () => {
+          jumpToFindingLine(c.line_number, fullFilePath);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function jumpToFindingLine(targetLineNum, targetFilePath) {
+      const diffTabBtn = document.querySelector('[data-tab="tab-diff"]');
+      if (diffTabBtn && !diffTabBtn.classList.contains("active")) {
+        diffTabBtn.click();
+      }
+
+      if (targetFilePath && currentParsedFiles && currentParsedFiles.length > 1) {
+        const matched = currentParsedFiles.find(f => f.path === targetFilePath || targetFilePath.includes(f.path) || f.path.includes(targetFilePath));
+        if (matched && activeSelectedFilePath !== matched.path) {
+          activeSelectedFilePath = matched.path;
+          const fileComments = (lastReviewResult ? lastReviewResult.comments : []).filter(c => !c.file_path || c.file_path.includes(matched.path) || matched.path.includes(c.file_path));
+          renderInteractiveDiff(matched.rawDiff, fileComments, false);
+          setupFileSelector(currentDiffText, lastReviewResult ? lastReviewResult.comments : []);
+          if (activeFilePath) activeFilePath.textContent = matched.path;
+        }
+      }
+
+      setTimeout(() => {
+        const rows = document.querySelectorAll(`.diff-row[data-line="${targetLineNum}"]`);
+        if (rows.length) {
+          const targetRow = rows[0];
+          targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetRow.classList.remove("jump-highlight");
+          void targetRow.offsetWidth;
+          targetRow.classList.add("jump-highlight");
+        }
+      }, 60);
+    }
+    window.jumpToFindingLine = jumpToFindingLine;
+
     function escapeHtml(str) {
-      return (str || "")
+      if (!str) return "";
+      return str
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -588,138 +1347,34 @@ index 9988776..1122334 100644
         .replace(/'/g, "&#039;");
     }
 
-    function renderInteractiveDiff(diffText, inlineComments = []) {
-      diffCodeContainer.innerHTML = "";
-      const lines = diffText.split("\n");
-      let oldLine = 0;
-      let newLine = 0;
-
-      lines.forEach((line) => {
-        let type = "context";
-        let symbol = " ";
-        let displayedOld = "";
-        let displayedNew = "";
-
-        if (line.startsWith("@@")) {
-          type = "hunk";
-          symbol = "~";
-          const match = line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
-          if (match) {
-            oldLine = parseInt(match[1]);
-            newLine = parseInt(match[2]);
-          }
-        } else if (line.startsWith("+")) {
-          type = "add";
-          symbol = "+";
-          displayedNew = newLine++;
-        } else if (line.startsWith("-")) {
-          type = "del";
-          symbol = "-";
-          displayedOld = oldLine++;
-        } else {
-          type = "context";
-          symbol = " ";
-          displayedOld = oldLine++;
-          displayedNew = newLine++;
-        }
-
-        const row = document.createElement("div");
-        row.className = `diff-row ${type}`;
-        row.innerHTML = `
-          <div class="diff-gutter">${displayedOld || displayedNew || "..."}</div>
-          <div class="diff-symbol">${symbol}</div>
-          <div class="diff-content">${escapeHtml(line.startsWith("+") || line.startsWith("-") ? line.slice(1) : line)}</div>
-        `;
-        diffCodeContainer.appendChild(row);
-
-        // Check if an AI Review Comment belongs under this line
-        if (type === "add" && displayedNew) {
-          const matchedComments = inlineComments.filter(c => c.line_number === displayedNew);
-          matchedComments.forEach(comment => {
-            const commentRow = document.createElement("div");
-            commentRow.className = `inline-comment-row ${comment.severity}`;
-
-            let fixHtml = "";
-            if (comment.suggested_diff_fix) {
-              fixHtml = `
-                <div class="fix-container">
-                  <div class="fix-header">
-                    <span>Suggested Patch Fix</span>
-                    <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.65rem;" onclick="navigator.clipboard.writeText(\`${escapeHtml(comment.suggested_diff_fix)}\`)">
-                      Copy Fix
-                    </button>
-                  </div>
-                  <div class="fix-code">${escapeHtml(comment.suggested_diff_fix)}</div>
-                </div>
-              `;
-            }
-
-            commentRow.innerHTML = `
-              <div class="comment-header">
-                <span class="severity-pill ${comment.severity}">${comment.severity}</span>
-                <span class="comment-category">${comment.category}</span>
-                <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Line ${comment.line_number}</span>
-              </div>
-              <div class="comment-summary">${escapeHtml(comment.issue_summary)}</div>
-              <div class="comment-explanation">${escapeHtml(comment.detailed_explanation)}</div>
-              ${fixHtml}
-            `;
-            diffCodeContainer.appendChild(commentRow);
-          });
-        }
-      });
-    }
-
-    // Initialize with default diff
-    renderInteractiveDiff(currentDiffText);
-
     // -------------------------------------------------------------
-    // 8. Terminal Streaming & Telemetry Logging
-    // -------------------------------------------------------------
-    function logTerminal(message, type = "normal") {
-      const now = new Date().toTimeString().split(" ")[0];
-      const row = document.createElement("div");
-      row.className = "t-row";
-      let tag = "";
-      if (type === "sec") tag = '<span class="t-tag-sec">[SECURITY]</span>';
-      else if (type === "perf") tag = '<span class="t-tag-perf">[PERF]</span>';
-      else if (type === "arch") tag = '<span class="t-tag-arch">[ARCH]</span>';
-      else if (type === "succ") tag = '<span class="t-tag-succ">[CONSENSUS]</span>';
-
-      row.innerHTML = `<span class="t-time">${now}</span> ${tag} <span>${message}</span>`;
-      terminalFeed.appendChild(row);
-      terminalFeed.scrollTop = terminalFeed.scrollHeight;
-
-      if (window.gsap) {
-        gsap.from(row, { opacity: 0, x: -8, duration: 0.2 });
-      }
-    }
-
-    // -------------------------------------------------------------
-    // 9. Multi-Agent Audit Runner
+    // 10. Multi-Agent Audit Runner
     // -------------------------------------------------------------
     async function executeAudit() {
-      const diffToTest = isCustomDiffMode ? rawDiffInput.value : currentDiffText;
+      let diffToTest = isCustomDiffMode ? (rawDiffInput ? rawDiffInput.value : "") : currentDiffText;
+      if (activeSelectedFilePath && currentParsedFiles && currentParsedFiles.length > 1) {
+        const found = currentParsedFiles.find(f => f.path === activeSelectedFilePath);
+        if (found) diffToTest = found.rawDiff;
+      }
       if (!diffToTest || !diffToTest.trim()) return alert("Please specify or paste a code diff to audit.");
-      currentDiffText = diffToTest;
 
       const apiKey = localStorage.getItem("BYOK_LLM_KEY") || localStorage.getItem("BYOK_GEMINI_KEY") || "";
       const provider = localStorage.getItem("BYOK_PROVIDER") || "gemini";
 
-      // UI Loading state
-      runAuditBtn.disabled = true;
-      auditSpinner.style.display = "inline-block";
-      auditPlayIcon.style.display = "none";
-      auditBtnText.textContent = "Auditing Code...";
+      if (runAuditBtn) runAuditBtn.disabled = true;
+      if (auditSpinner) auditSpinner.style.display = "inline-block";
+      if (auditPlayIcon) auditPlayIcon.style.display = "none";
+      if (auditBtnText) auditBtnText.textContent = "Scanning Code...";
 
-      // Reset Workers & Terminal
-      terminalFeed.innerHTML = "";
+      if (window.setRobotAuditState) window.setRobotAuditState("auditing");
+
+      if (terminalFeed) terminalFeed.innerHTML = "";
       logTerminal("Orchestrator: Parsing unified patch & computing AST scopes...", "normal");
 
-      stateSec.textContent = "Auditing...";
-      statePerf.textContent = "Auditing...";
-      stateArch.textContent = "Auditing...";
-      stateSynth.textContent = "Awaiting consensus";
+      if (stateSec) stateSec.textContent = "Auditing...";
+      if (statePerf) statePerf.textContent = "Auditing...";
+      if (stateArch) stateArch.textContent = "Auditing...";
+      if (stateSynth) stateSynth.textContent = "Awaiting consensus";
 
       const hudProgSec = document.getElementById("hudProgSec");
       const hudProgPerf = document.getElementById("hudProgPerf");
@@ -753,7 +1408,7 @@ index 9988776..1122334 100644
         gsap.to([progSynth, hudProgSynth], { width: "30%", duration: 0.4 });
       }
 
-      logTerminal("Parallel specialist dispatch: [Security, Performance, Architecture]", "normal");
+      logTerminal("Parallel specialist dispatch: [BOT-SEC, BOT-PERF, BOT-ARCH]", "normal");
 
       const startTime = performance.now();
 
@@ -772,14 +1427,13 @@ index 9988776..1122334 100644
         const data = await response.json();
         const duration = Math.round(performance.now() - startTime);
 
-        // Complete Progress Bars
         if (window.gsap) {
           gsap.to([progSec, progPerf, progArch, progSynth, hudProgSec, hudProgPerf, hudProgArch, hudProgSynth], { width: "100%", duration: 0.3 });
         }
-        stateSec.textContent = "Complete";
-        statePerf.textContent = "Complete";
-        stateArch.textContent = "Complete";
-        stateSynth.textContent = "Synthesized & Validated";
+        if (stateSec) stateSec.textContent = "Complete";
+        if (statePerf) statePerf.textContent = "Complete";
+        if (stateArch) stateArch.textContent = "Complete";
+        if (stateSynth) stateSynth.textContent = "Synthesized & Validated";
 
         if (hudStateSec) hudStateSec.textContent = "Complete";
         if (hudStatePerf) hudStatePerf.textContent = "Complete";
@@ -791,188 +1445,334 @@ index 9988776..1122334 100644
         if (hudDotArch) hudDotArch.className = "hud-dot";
         if (hudDotSynth) hudDotSynth.className = "hud-dot";
 
-        // Log Findings
         (data.comments || []).forEach(c => {
           const type = c.category === "SECURITY" ? "sec" : (c.category === "PERFORMANCE" ? "perf" : "arch");
           logTerminal(`Line ${c.line_number}: [${c.severity}] ${c.issue_summary}`, type);
         });
 
         logTerminal(`Consensus resolved: Overall Status -> ${data.overall_status}`, "succ");
-        logTerminal(`Schema guardrail: Pydantic v2 validation passed 100%.`, "succ");
+        logTerminal("Schema guardrail: Pydantic v2 validation passed 100%.", "succ");
 
-        // Render UI Results
         displayResults(data, duration);
 
       } catch (err) {
         logTerminal(`Audit failed: ${err.message}`, "sec");
       } finally {
-        runAuditBtn.disabled = false;
-        auditSpinner.style.display = "none";
-        auditPlayIcon.style.display = "inline-block";
-        auditBtnText.textContent = "Run Multi-Agent Audit";
+        if (runAuditBtn) runAuditBtn.disabled = false;
+        if (auditSpinner) auditSpinner.style.display = "none";
+        if (auditPlayIcon) auditPlayIcon.style.display = "inline-block";
+        if (auditBtnText) auditBtnText.textContent = "Dispatch Robot Audit";
       }
     }
 
     function displayResults(data, latencyMs) {
       lastSummaryMarkdown = data.summary_markdown || "";
       lastReviewResult = data;
-      copyReviewBtn.style.display = "inline-flex";
-      btnPublishGitHub.style.display = "inline-flex";
+      if (copyReviewBtn) copyReviewBtn.style.display = "inline-flex";
+      if (btnPublishGitHub) btnPublishGitHub.style.display = "inline-flex";
 
-      // Re-render Diff with Inline Findings
       if (isCustomDiffMode) {
-        rawDiffInput.style.display = "none";
-        diffCodeContainer.style.display = "block";
+        if (rawDiffInput) rawDiffInput.style.display = "none";
+        if (diffCodeContainer) diffCodeContainer.style.display = "block";
         isCustomDiffMode = false;
-        toggleCustomDiffBtn.classList.remove("active");
-        btnNewBlankDiff.classList.remove("active");
+        if (toggleCustomDiffBtn) toggleCustomDiffBtn.classList.remove("active");
+        if (btnNewBlankDiff) btnNewBlankDiff.classList.remove("active");
       }
-      renderInteractiveDiff(currentDiffText, data.comments || []);
-
-      // Update Engine Badge
-      const engineText = data.engine_used || "AST Deterministic Engine (Offline Fallback)";
-      if (engineBadgeText) {
-        engineBadgeText.textContent = engineText;
-        if (engineText.includes("Gemini")) engineBadgeText.style.color = "var(--accent)";
-        else if (engineText.includes("OpenAI")) engineBadgeText.style.color = "#10a37f";
-        else if (engineText.includes("Anthropic")) engineBadgeText.style.color = "#d97706";
-        else if (engineText.includes("Groq")) engineBadgeText.style.color = "#f55036";
-        else engineBadgeText.style.color = "var(--warning)";
-      }
-
-      // Update Verdict Badge
-      verdictBadge.className = `verdict-status-badge ${data.overall_status}`;
-      if (data.overall_status === "APPROVE") {
-        verdictText.textContent = "Approved";
-        verdictIcon.setAttribute("data-lucide", "check-circle");
-        verdictHeadline.innerHTML = "All parallel specialist checks passed. <strong>No blocking vulnerabilities or leaks.</strong>";
-      } else if (data.overall_status === "REQUEST_CHANGES") {
-        verdictText.textContent = "Changes Requested";
-        verdictIcon.setAttribute("data-lucide", "alert-octagon");
-        verdictHeadline.innerHTML = `Automated specialists flagged <strong>${(data.comments || []).length} blocking issues</strong> requiring remediation.`;
+      if (activeSelectedFilePath && currentParsedFiles && currentParsedFiles.length > 1) {
+        const found = currentParsedFiles.find(f => f.path === activeSelectedFilePath);
+        if (found) {
+          const fileComments = (data.comments || []).filter(c => !c.file_path || c.file_path.includes(found.path) || found.path.includes(c.file_path));
+          renderInteractiveDiff(found.rawDiff, fileComments, false);
+          setupFileSelector(currentDiffText, data.comments || []);
+        } else {
+          renderInteractiveDiff(currentDiffText, data.comments || []);
+        }
       } else {
-        verdictText.textContent = "Comments Provided";
-        verdictIcon.setAttribute("data-lucide", "message-square");
-        verdictHeadline.innerHTML = "Advisory findings detected. Review comments before merging.";
+        renderInteractiveDiff(currentDiffText, data.comments || []);
       }
 
-      // Update Counters
+      const engineText = data.engine_used || "AST Deterministic Engine (Offline Fallback)";
+      const robotNameLabel = document.getElementById("robotNameLabel");
+      const robotCoreEngine = document.getElementById("robotCoreEngine");
+      const diffEngineTag = document.getElementById("diffEngineTag");
+
+      if (engineText.includes("Gemini")) {
+        if (robotNameLabel) robotNameLabel.textContent = "GEMINI 1.5 // SENTINEL-01";
+        if (robotCoreEngine) robotCoreEngine.textContent = "ENGINE: GEMINI (LIVE)";
+        if (diffEngineTag) diffEngineTag.textContent = "Google Gemini 1.5 Pro";
+      } else if (engineText.includes("OpenAI") || engineText.includes("GPT")) {
+        if (robotNameLabel) robotNameLabel.textContent = "CHATGPT (GPT-4o) // SENTINEL-01";
+        if (robotCoreEngine) robotCoreEngine.textContent = "ENGINE: GPT-4o (LIVE)";
+        if (diffEngineTag) diffEngineTag.textContent = "OpenAI GPT-4o";
+      } else if (engineText.includes("Anthropic") || engineText.includes("Claude")) {
+        if (robotNameLabel) robotNameLabel.textContent = "CLAUDE 3.5 // SENTINEL-01";
+        if (robotCoreEngine) robotCoreEngine.textContent = "ENGINE: CLAUDE (LIVE)";
+        if (diffEngineTag) diffEngineTag.textContent = "Claude 3.5 Sonnet";
+      } else if (engineText.includes("Groq")) {
+        if (robotNameLabel) robotNameLabel.textContent = "GROQ LLAMA-3 // SENTINEL-01";
+        if (robotCoreEngine) robotCoreEngine.textContent = "ENGINE: GROQ (LIVE)";
+        if (diffEngineTag) diffEngineTag.textContent = "Groq Llama 3.3";
+      } else {
+        if (robotNameLabel) robotNameLabel.textContent = "AI BOT // SENTINEL-01";
+        if (robotCoreEngine) robotCoreEngine.textContent = "CORE: OFFLINE AST";
+        if (diffEngineTag) diffEngineTag.textContent = "Python 3.12 AST (Offline)";
+      }
+
+      if (verdictBadge) verdictBadge.className = `verdict-status-badge ${data.overall_status}`;
+      if (data.overall_status === "APPROVE") {
+        if (verdictText) verdictText.textContent = "Approved";
+        if (verdictHeadline) {
+          verdictHeadline.innerHTML = "All parallel bot specialist checks passed. <strong>No blocking vulnerabilities or leaks.</strong>";
+        }
+        if (window.setRobotAuditState) window.setRobotAuditState("approved");
+      } else if (data.overall_status === "REQUEST_CHANGES") {
+        if (verdictText) verdictText.textContent = "Changes Requested";
+        if (verdictHeadline) {
+          verdictHeadline.innerHTML = `Automated bot specialists flagged <strong>${(data.comments || []).length} blocking issues</strong> requiring remediation.`;
+        }
+        if (window.setRobotAuditState) window.setRobotAuditState("changes");
+      } else {
+        if (verdictText) verdictText.textContent = "Comments Provided";
+        if (verdictHeadline) {
+          verdictHeadline.innerHTML = "Advisory findings detected. Review comments before merging.";
+        }
+        if (window.setRobotAuditState) window.setRobotAuditState("changes");
+      }
+
       const crits = (data.comments || []).filter(c => c.severity === "CRITICAL").length;
       const warns = (data.comments || []).filter(c => c.severity === "WARNING").length;
       const total = (data.comments || []).length;
 
-      metricCrit.textContent = crits;
-      metricWarn.textContent = warns;
-      metricLatency.textContent = `${latencyMs}ms`;
-      metricCost.textContent = `$${(data.total_token_cost_usd || 0.0012).toFixed(4)}`;
-      findingsBadge.textContent = `${total} issue${total === 1 ? '' : 's'}`;
+      if (metricCrit) metricCrit.textContent = crits;
+      if (metricWarn) metricWarn.textContent = warns;
+      if (metricLatency) metricLatency.textContent = `${latencyMs}ms`;
+      if (metricCost) metricCost.textContent = `$${(data.total_token_cost_usd || 0.0012).toFixed(4)}`;
+      if (findingsBadge) findingsBadge.textContent = `${total} issue${total === 1 ? '' : 's'}`;
 
-      // Update Markdown Surface
-      renderMarkdownReport(data.summary_markdown);
+      if (markdownSurface) {
+        let mdHtml = lastSummaryMarkdown
+          .replace(/### (.*?)\n/g, '<h3>$1</h3>')
+          .replace(/## (.*?)\n/g, '<h2>$1</h2>')
+          .replace(/# (.*?)\n/g, '<h1>$1</h1>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\n\n/g, '<br><br>');
+        markdownSurface.innerHTML = mdHtml;
+      }
 
-      // Refresh Lucide Icons
-      lucide.createIcons();
+      // Update Critical Problems Dashboard Deck and Header Hotspots
+      updateDashboardCriticalDeck(data.comments || []);
+      updateDiffHeaderHotspots(data.comments || [], activeSelectedFilePath);
     }
 
-    function renderMarkdownReport(mdText) {
-      if (!mdText) return;
+    if (copyReviewBtn) {
+      copyReviewBtn.addEventListener("click", () => {
+        if (!lastSummaryMarkdown) return;
+        navigator.clipboard.writeText(lastSummaryMarkdown).then(() => {
+          const originalText = copyReviewBtn.innerHTML;
+          copyReviewBtn.innerHTML = `<span>Copied to Clipboard!</span>`;
+          setTimeout(() => { copyReviewBtn.innerHTML = originalText; }, 1800);
+        });
+      });
+    }
 
-      // 1. Strip any emoji characters completely to ensure clean, high-taste typography
-      let cleaned = mdText.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '');
+    // -------------------------------------------------------------
+    // 11. Interactive 3D Robot Sentinel Engine (Safe Three.js)
+    // -------------------------------------------------------------
+    function initRobotSentinel() {
+      const canvas = document.getElementById("robot-canvas");
+      if (!canvas) return;
 
-      // 2. Parse Markdown Tables into structured HTML tables
-      const tableRegex = /((?:\|[^\n]+\|\r?\n)+)/g;
-      cleaned = cleaned.replace(tableRegex, (match) => {
-        const rows = match.trim().split(/\r?\n/).filter(r => r.trim());
-        if (rows.length < 2) return match;
+      // Safe check for Three.js
+      if (typeof THREE === "undefined") {
+        console.warn("Three.js not loaded. Using 2D SVG Sentinel HUD.");
+        return;
+      }
 
-        let tableHtml = '<div class="report-table-wrapper"><table class="report-table">';
-        let isHeader = true;
+      try {
+        const width = 90;
+        const height = 90;
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.z = 70;
 
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i].trim();
-          if (/^\|(?:\s*:?-+:?\s*\|)+$/.test(row)) {
-            isHeader = false;
-            continue;
-          }
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-          const cols = row.split('|').slice(1, -1).map(c => c.trim());
-          if (isHeader) {
-            tableHtml += '<thead><tr>';
-            cols.forEach(c => { tableHtml += `<th>${c}</th>`; });
-            tableHtml += '</tr></thead><tbody>';
-            isHeader = false;
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const amberLight = new THREE.DirectionalLight(0xf59e0b, 1.8);
+        amberLight.position.set(20, 30, 40);
+        scene.add(amberLight);
+
+        const fillLight = new THREE.DirectionalLight(0x06b6d4, 0.5);
+        fillLight.position.set(-30, -20, -20);
+        scene.add(fillLight);
+
+        const robotGroup = new THREE.Group();
+        scene.add(robotGroup);
+
+        const coreGeo = new THREE.IcosahedronGeometry(14, 1);
+        const coreMat = new THREE.MeshStandardMaterial({
+          color: 0x141720,
+          roughness: 0.25,
+          metalness: 0.85,
+          flatShading: true,
+        });
+        const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+        robotGroup.add(coreMesh);
+
+        const edgesGeo = new THREE.EdgesGeometry(coreGeo);
+        const edgesMat = new THREE.LineBasicMaterial({
+          color: 0xf59e0b,
+          transparent: true,
+          opacity: 0.65,
+        });
+        const wireframeCage = new THREE.LineSegments(edgesGeo, edgesMat);
+        robotGroup.add(wireframeCage);
+
+        const visorGeo = new THREE.CylinderGeometry(14.2, 14.2, 3.2, 16, 1, true, -Math.PI / 3, (2 * Math.PI) / 3);
+        const visorMat = new THREE.MeshBasicMaterial({
+          color: 0xfbbf24,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.9,
+        });
+        const visor = new THREE.Mesh(visorGeo, visorMat);
+        visor.rotation.x = Math.PI / 2;
+        robotGroup.add(visor);
+
+        const eyePupilGeo = new THREE.SphereGeometry(3.5, 16, 16);
+        const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+        const eyePupil = new THREE.Mesh(eyePupilGeo, eyePupilMat);
+        eyePupil.position.set(0, 0, 14);
+        robotGroup.add(eyePupil);
+
+        const ring1Geo = new THREE.TorusGeometry(20, 0.6, 8, 48);
+        const ring1Mat = new THREE.MeshStandardMaterial({
+          color: 0x383e4d,
+          metalness: 0.9,
+          roughness: 0.3,
+        });
+        const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
+        robotGroup.add(ring1);
+
+        const ring2Geo = new THREE.TorusGeometry(24, 0.5, 8, 48);
+        const ring2Mat = new THREE.MeshBasicMaterial({
+          color: 0xf59e0b,
+          transparent: true,
+          opacity: 0.5,
+        });
+        const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
+        robotGroup.add(ring2);
+
+        let isAuditing = false;
+        let targetRotX = 0;
+        let targetRotY = 0;
+
+        window.addEventListener("mousemove", (e) => {
+          const normX = (e.clientX / window.innerWidth) * 2 - 1;
+          const normY = -(e.clientY / window.innerHeight) * 2 + 1;
+          targetRotY = normX * 0.65;
+          targetRotX = -normY * 0.45;
+        });
+
+        window.setRobotAuditState = function(state) {
+          const stateEl = document.getElementById("robotStateText");
+          const visorFallback = document.getElementById("robotFallbackVisor");
+          if (state === "auditing") {
+            isAuditing = true;
+            if (stateEl) {
+              stateEl.textContent = "SCANNING DIFF...";
+              stateEl.className = "robot-state-badge scanning";
+            }
+            if (visorFallback) visorFallback.className = "robot-visor-scanner scanning";
+            visorMat.color.setHex(0xef4444);
+            eyePupilMat.color.setHex(0xff7875);
+            ring2Mat.color.setHex(0xef4444);
+          } else if (state === "approved") {
+            isAuditing = false;
+            if (stateEl) {
+              stateEl.textContent = "VERDICT: APPROVED";
+              stateEl.className = "robot-state-badge approved";
+            }
+            if (visorFallback) visorFallback.className = "robot-visor-scanner approved";
+            visorMat.color.setHex(0x10b981);
+            eyePupilMat.color.setHex(0x6ee7b7);
+            ring2Mat.color.setHex(0x10b981);
+          } else if (state === "changes") {
+            isAuditing = false;
+            if (stateEl) {
+              stateEl.textContent = "VERDICT: ISSUES FOUND";
+              stateEl.className = "robot-state-badge changes";
+            }
+            if (visorFallback) visorFallback.className = "robot-visor-scanner changes";
+            visorMat.color.setHex(0xef4444);
+            eyePupilMat.color.setHex(0xff7875);
+            ring2Mat.color.setHex(0xef4444);
           } else {
-            tableHtml += '<tr>';
-            cols.forEach(c => { tableHtml += `<td>${c}</td>`; });
-            tableHtml += '</tr>';
+            isAuditing = false;
+            if (stateEl) {
+              stateEl.textContent = "SYS: STANDBY";
+              stateEl.className = "robot-state-badge";
+            }
+            if (visorFallback) visorFallback.className = "robot-visor-scanner";
+            visorMat.color.setHex(0xfbbf24);
+            eyePupilMat.color.setHex(0xfffbeb);
+            ring2Mat.color.setHex(0xf59e0b);
           }
+        };
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+          requestAnimationFrame(animate);
+          const elapsedTime = clock.getElapsedTime();
+
+          robotGroup.position.y = Math.sin(elapsedTime * 2) * 1.5;
+          robotGroup.rotation.y += (targetRotY - robotGroup.rotation.y) * 0.08;
+          robotGroup.rotation.x += (targetRotX - robotGroup.rotation.x) * 0.08;
+
+          const speedMult = isAuditing ? 3.5 : 1.0;
+          ring1.rotation.x += 0.012 * speedMult;
+          ring1.rotation.y += 0.008 * speedMult;
+          ring2.rotation.y -= 0.018 * speedMult;
+          ring2.rotation.z += 0.01 * speedMult;
+
+          if (isAuditing) {
+            eyePupil.position.x = Math.sin(elapsedTime * 14) * 5;
+            visorMat.opacity = 0.6 + Math.sin(elapsedTime * 12) * 0.4;
+          } else {
+            eyePupil.position.x += (0 - eyePupil.position.x) * 0.1;
+            visorMat.opacity = 0.85 + Math.sin(elapsedTime * 2) * 0.15;
+          }
+
+          renderer.render(scene, camera);
         }
-        tableHtml += '</tbody></table></div>';
-        return tableHtml;
-      });
+        animate();
 
-      // 3. Transform PR STATUS labels into High-Contrast Badges
-      cleaned = cleaned.replace(/\*\*PR STATUS:\s*CHANGES REQUESTED\*\*/gi, 
-        '<div class="report-status-pill danger"><i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i> PR STATUS: CHANGES REQUESTED</div>');
-      cleaned = cleaned.replace(/\*\*PR STATUS:\s*APPROVED\*\*/gi, 
-        '<div class="report-status-pill success"><i data-lucide="shield-check" style="width: 14px; height: 14px;"></i> PR STATUS: APPROVED</div>');
-      cleaned = cleaned.replace(/\*\*PR STATUS:\s*REVIEW COMMENTS PROVIDED\*\*/gi, 
-        '<div class="report-status-pill warning"><i data-lucide="info" style="width: 14px; height: 14px;"></i> PR STATUS: REVIEW COMMENTS PROVIDED</div>');
-
-      // 4. Transform blockquotes
-      cleaned = cleaned.replace(/^>\s*(.+)$/gim, '<div class="report-callout">$1</div>');
-
-      // 5. Transform bullet lists
-      const listRegex = /((?:^-\s*.+\r?\n?)+)/gm;
-      cleaned = cleaned.replace(listRegex, (match) => {
-        const items = match.trim().split(/\r?\n/).filter(line => line.startsWith('-'));
-        const lis = items.map(line => `<li>${line.replace(/^-\s*/, '')}</li>`).join('');
-        return `<ul class="report-list">${lis}</ul>`;
-      });
-
-      // 6. Standard Headings and Formats
-      let html = cleaned
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-        .replace(/`([^`]+)`/gim, '<code>$1</code>')
-        .replace(/\n\n/gim, '<br><br>');
-
-      markdownSurface.innerHTML = html;
-      lucide.createIcons();
+      } catch (err) {
+        console.warn("Three.js initialization notice:", err);
+      }
     }
 
     // -------------------------------------------------------------
-    // 10. Global Listeners & Keyboard Shortcuts
+    // 12. Global Listeners & Startup Initialization
     // -------------------------------------------------------------
-    runAuditBtn.addEventListener("click", executeAudit);
+    if (runAuditBtn) runAuditBtn.addEventListener("click", executeAudit);
 
-    // Keyboard Shortcut: Cmd/Ctrl + Enter triggers audit
     window.addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
         executeAudit();
       }
-      if (e.key === "Escape") {
-        if (settingsDialog.classList.contains("active")) closeModal();
-        if (githubDialog.classList.contains("active")) closeGitHubModal();
-        if (githubPublishDialog.classList.contains("active")) closePublishDialog();
-      }
     });
 
-    copyReviewBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(lastSummaryMarkdown);
-      const prev = copyReviewBtn.innerHTML;
-      copyReviewBtn.innerHTML = `<i data-lucide="check" style="width: 13px; height: 13px; color: var(--success);"></i> Copied!`;
-      lucide.createIcons();
-      setTimeout(() => {
-        copyReviewBtn.innerHTML = prev;
-        lucide.createIcons();
-      }, 1800);
-    });
+    // Startup Execution: Run immediately so the UI is active right away!
+    updateNavEngineUI();
+    renderInteractiveDiff(currentDiffText);
+    initRobotSentinel();
 
-    // Initialize Lucide Icons
-    lucide.createIcons();
+    logTerminal("Sentinel Orchestrator initialized. AST Parser ready.", "normal");

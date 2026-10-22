@@ -3,65 +3,1114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Autonomous Multi-Agent PR Reviewer & Security Auditor</title>
+  <title>SENTINEL // Autonomous AI Bot PR Reviewer & Security Auditor</title>
   <link rel="icon" type="image/png" href="/static/logo.png" />
   <link rel="apple-touch-icon" href="/static/logo.png" />
-  
-  <!-- Fonts: Inter & JetBrains Mono -->
+
+  <!-- Fonts: Space Grotesk (Display), Plus Jakarta Sans (Body), Space Mono (Code/Telemetry) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
 
-  <!-- CDNs: Lucide Icons, GSAP, Three.js -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Embedded Core Design System: Deep Charcoal & Tactical AI Robotics (Zero Blue, Guaranteed Instant Paint) -->
+  <style>
+    :root {
+      --bg-canvas: #08090c;
+      --bg-surface: #0f1117;
+      --bg-surface-elevated: #151822;
+      --bg-surface-hover: #1c202d;
+      --bg-glass: rgba(15, 17, 23, 0.92);
+      --bg-glass-card: rgba(21, 24, 34, 0.88);
+
+      --border-subtle: #232734;
+      --border-active: #343b4f;
+      --border-glow: rgba(245, 158, 11, 0.35);
+
+      --text-main: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #525a6c;
+
+      --accent: #f59e0b;
+      --accent-light: #fbbf24;
+      --accent-hover: #d97706;
+      --accent-glow: rgba(245, 158, 11, 0.3);
+      --accent-surface: rgba(245, 158, 11, 0.08);
+
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #a855f7;
+      --cyan: #06b6d4;
+
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+
+      --font-display: 'Space Grotesk', -apple-system, sans-serif;
+      --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'Space Mono', SFMono-Regular, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    body {
+      background-color: var(--bg-canvas);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(21, 24, 34, 0.7) 0%, transparent 50%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 16px 24px 60px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 100vh;
+    }
+
+    /* Top Nav */
+    header.top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 28px rgba(0, 0, 0, 0.6);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(21, 24, 34, 0.9));
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .brand-meta h1 {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      letter-spacing: 0.02em;
+    }
+    .brand-meta p {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+    .branch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+    }
+    .bot-unit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      color: var(--accent-light);
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .github-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10b981;
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      transition: all 0.2s ease;
+    }
+    .github-nav-btn:hover {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: #34d399;
+      color: #34d399;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+    .vault-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      transition: all 0.2s ease;
+    }
+    .vault-pill:hover {
+      border-color: var(--accent);
+      background: var(--bg-surface-elevated);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      display: inline-block;
+    }
+    .status-dot.offline {
+      background: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
+    }
+
+    /* Control Ribbon */
+    .control-ribbon {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .preset-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      padding: 4px;
+      border-radius: var(--radius-lg);
+    }
+    .preset-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: var(--font-mono);
+    }
+    .preset-idx { color: var(--text-muted); font-size: 0.68rem; }
+    .preset-tab:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+    .preset-tab.active {
+      color: #fff;
+      background: var(--bg-surface-elevated);
+      border-color: var(--border-active);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+    .preset-tab.active .preset-idx { color: var(--accent); }
+    .stat-pill {
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .stat-pill.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .stat-pill.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .stat-pill.success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .audit-action-group { display: flex; align-items: center; gap: 12px; }
+
+    /* High-Impact Cyber Amber Button (STRICTLY NO BLUE) */
+    .btn-run-audit {
+      background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+      color: #08090c !important;
+      border: 1px solid rgba(251, 191, 36, 0.6) !important;
+      padding: 10px 22px;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 0.84rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45) !important;
+      letter-spacing: 0.01em;
+      font-family: var(--font-display);
+    }
+    .btn-run-audit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245, 158, 11, 0.65) !important;
+      filter: brightness(1.08);
+    }
+    .btn-run-audit:active { transform: translateY(0); }
+    .btn-run-audit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .shortcut-tag {
+      font-size: 0.68rem;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Executive Strip (3-Column Tactical Cockpit) */
+    .executive-strip {
+      display: grid;
+      grid-template-columns: 280px 1fr auto;
+      gap: 20px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px 20px;
+      align-items: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    @media (max-width: 1080px) {
+      .executive-strip { grid-template-columns: 1fr; }
+    }
+
+    /* AI Robot Sentinel HUD Unit */
+    .sentinel-robot-unit {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 8px 12px 8px 8px;
+    }
+    .robot-canvas-container {
+      width: 86px;
+      height: 86px;
+      position: relative;
+      background: #050608;
+      border: 1px solid #1a1d26;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #robot-canvas {
+      width: 86px !important;
+      height: 86px !important;
+      display: block;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 2;
+    }
+    /* Animated Cyber Scanner Visor Fallback */
+    .robot-visor-scanner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
+      z-index: 1;
+    }
+    .robot-visor-eye {
+      width: 44px;
+      height: 14px;
+      border: 1px solid rgba(245, 158, 11, 0.6);
+      border-radius: 7px;
+      background: rgba(245, 158, 11, 0.15);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+    }
+    .robot-visor-pupil {
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      width: 12px;
+      height: 10px;
+      background: #fbbf24;
+      border-radius: 5px;
+      box-shadow: 0 0 8px #fbbf24;
+      animation: visorScan 2.4s ease-in-out infinite alternate;
+    }
+    @keyframes visorScan {
+      0% { left: 2px; }
+      100% { left: 28px; }
+    }
+    .robot-visor-scanner.scanning .robot-visor-eye {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+    }
+    .robot-visor-scanner.scanning .robot-visor-pupil {
+      background: #ff7875;
+      box-shadow: 0 0 12px #ff4d4f;
+      animation: visorScan 0.6s ease-in-out infinite alternate;
+    }
+    .robot-visor-scanner.approved .robot-visor-eye {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+    }
+    .robot-visor-scanner.approved .robot-visor-pupil {
+      background: #34d399;
+      box-shadow: 0 0 10px #34d399;
+    }
+
+    .robot-target-bracket { position: absolute; width: 6px; height: 6px; border-color: rgba(245, 158, 11, 0.6); pointer-events: none; z-index: 3; }
+    .robot-target-bracket.tl { top: 2px; left: 2px; border-top: 1px solid; border-left: 1px solid; }
+    .robot-target-bracket.tr { top: 2px; right: 2px; border-top: 1px solid; border-right: 1px solid; }
+    .robot-target-bracket.bl { bottom: 2px; left: 2px; border-bottom: 1px solid; border-left: 1px solid; }
+    .robot-target-bracket.br { bottom: 2px; right: 2px; border-bottom: 1px solid; border-right: 1px solid; }
+
+    .robot-hud-meta { display: flex; flex-direction: column; gap: 4px; }
+    .robot-callsign {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: var(--font-display);
+      color: #fff;
+    }
+    .robot-beacon {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      display: inline-block;
+      animation: pulse-beacon 1.8s infinite;
+    }
+    .robot-state-badge {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      background: var(--accent-surface);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      width: fit-content;
+      transition: all 0.25s ease;
+    }
+    .robot-state-badge.scanning {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      animation: pulse-beacon 1s infinite;
+    }
+    .robot-state-badge.approved {
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .robot-state-badge.changes {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    .robot-telemetry-micro { font-size: 0.62rem; font-family: var(--font-mono); color: var(--text-muted); }
+
+    /* Verdict Info */
+    .verdict-info { display: flex; align-items: center; gap: 14px; }
+    .verdict-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .verdict-status-badge.REQUEST_CHANGES {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: var(--danger);
+    }
+    .verdict-status-badge.APPROVE {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: var(--success);
+    }
+    .verdict-status-badge.COMMENT {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: var(--warning);
+    }
+    .verdict-status-badge.STANDBY {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--accent);
+    }
+    .verdict-headline { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+    .verdict-headline strong { color: #fff; }
+
+    .telemetry-pills-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .metric-chip {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 78px;
+    }
+    .metric-chip-val { font-size: 1.05rem; font-weight: 800; font-family: var(--font-mono); color: #fff; line-height: 1.1; }
+    .metric-chip-lbl { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; font-family: var(--font-mono); }
+
+    /* Specialist Bot Squad HUD */
+    .active-agent-hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 960px) { .active-agent-hud { grid-template-columns: repeat(2, 1fr); } }
+    .hud-agent-cell {
+      background: var(--bg-glass-card);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .hud-agent-header { display: flex; align-items: center; justify-content: space-between; }
+    .hud-agent-title { display: flex; align-items: center; gap: 7px; font-size: 0.74rem; font-weight: 700; color: #fff; font-family: var(--font-display); }
+    .hud-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); display: inline-block; }
+    .hud-dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse-beacon 1.5s infinite; }
+    .hud-agent-status { font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-secondary); }
+    .hud-meter-track { height: 3px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; }
+    .hud-meter-fill { height: 100%; width: 0%; border-radius: 2px; transition: width 0.3s ease; }
+
+    /* Workspace Tabs */
+    .workspace-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+    }
+    .nav-tabs-list { display: flex; align-items: center; gap: 6px; }
+    .workspace-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: var(--font-display);
+    }
+    .tab-idx { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
+    .workspace-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+    .workspace-tab-btn.active {
+      color: #fff;
+      background: var(--bg-surface-elevated);
+      border-color: var(--border-active);
+    }
+    .workspace-tab-btn.active .tab-idx { color: var(--accent); }
+    .tab-badge { font-size: 0.68rem; padding: 1px 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary); font-family: var(--font-mono); }
+    .workspace-tab-btn.active .tab-badge { background: var(--accent-surface); color: var(--accent-light); }
+    .workspace-tab-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-secondary {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover { color: #fff; border-color: var(--border-active); background: var(--bg-surface-elevated); }
+
+    /* Surface Card & Panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .surface-card {
+      background: var(--bg-glass-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Diff Viewer */
+    .diff-file-header {
+      background: var(--bg-surface-elevated);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+    }
+    .diff-file-title { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-weight: 600; color: #fff; }
+    .diff-file-stats { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+    .diff-code-wrapper {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      background: #08090c;
+      overflow-x: auto;
+      min-height: 280px;
+    }
+    .diff-row { display: flex; align-items: stretch; min-height: 24px; position: relative; }
+    .diff-row:hover { background: rgba(255, 255, 255, 0.025); }
+    .diff-gutter {
+      width: 52px;
+      padding: 0 10px;
+      text-align: right;
+      color: var(--text-muted);
+      user-select: none;
+      font-size: 0.72rem;
+      background: #0a0c10;
+      border-right: 1px solid #1a1d26;
+      flex-shrink: 0;
+    }
+    .diff-symbol { width: 24px; text-align: center; user-select: none; flex-shrink: 0; color: var(--text-muted); font-weight: 700; }
+    .diff-content { padding: 0 12px; white-space: pre; flex-grow: 1; color: #e5e7eb; }
+    .diff-row.hunk { background: rgba(245, 158, 11, 0.08); color: var(--accent); border-top: 1px solid rgba(245, 158, 11, 0.18); border-bottom: 1px solid rgba(245, 158, 11, 0.18); }
+    .diff-row.hunk .diff-content { color: #fde68a; font-weight: 600; }
+    .diff-row.add { background: rgba(16, 185, 129, 0.12); }
+    .diff-row.add .diff-symbol { color: var(--success); }
+    .diff-row.add .diff-content { color: #a7f3d0; }
+    .diff-row.del { background: rgba(239, 68, 68, 0.12); }
+    .diff-row.del .diff-symbol { color: var(--danger); }
+    .diff-row.del .diff-content { color: #fecaca; }
+
+    /* Inline Comment Cards */
+    .inline-comment-row {
+      background: #10131a;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px 18px 14px 62px;
+      position: relative;
+    }
+    .inline-comment-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+    .inline-comment-row.CRITICAL::before { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
+    .inline-comment-row.WARNING::before { background: var(--warning); box-shadow: 0 0 12px var(--warning); }
+    .inline-comment-row.INFO::before { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .comment-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .severity-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; font-family: var(--font-mono); }
+    .severity-pill.CRITICAL { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.4); }
+    .severity-pill.WARNING { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4); }
+    .severity-pill.INFO { background: rgba(245, 158, 11, 0.15); color: var(--accent); border: 1px solid rgba(245, 158, 11, 0.35); }
+    .comment-category { font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); font-family: var(--font-mono); }
+    .comment-summary { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 6px; font-family: var(--font-display); }
+    .comment-explanation { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; font-family: var(--font-body); }
+    .fix-container { background: #07080b; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; }
+    .fix-header { background: rgba(255, 255, 255, 0.03); padding: 6px 12px; font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; font-family: var(--font-mono); }
+    .fix-code { padding: 10px 14px; font-family: var(--font-mono); font-size: 0.75rem; color: #34d399; white-space: pre-wrap; line-height: 1.5; }
+    .raw-diff-textarea { width: 100%; height: 480px; background: #08090c; color: #e5e7eb; border: none; padding: 16px 20px; font-family: var(--font-mono); font-size: 0.8rem; outline: none; display: none; }
+
+    /* Telemetry HUD Tab */
+    .telemetry-grid-layout { display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding: 20px; }
+    @media (max-width: 960px) { .telemetry-grid-layout { grid-template-columns: 1fr; } }
+    .worker-stack-card { display: flex; flex-direction: column; gap: 12px; }
+    .worker-panel-header { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); }
+    .worker-unit { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; }
+    .worker-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .worker-name { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; color: #fff; font-family: var(--font-display); }
+    .worker-state { font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-secondary); }
+    .worker-meter-track { height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; }
+    .worker-meter-fill { height: 100%; width: 0%; border-radius: 2px; transition: width 0.3s ease; }
+    .terminal-container { background: #06070a; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); display: flex; flex-direction: column; overflow: hidden; min-height: 420px; }
+    .terminal-bar { background: rgba(255, 255, 255, 0.03); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); font-size: 0.72rem; color: var(--text-secondary); font-family: var(--font-mono); }
+    .term-dots { display: flex; gap: 6px; }
+    .term-dot { width: 9px; height: 9px; border-radius: 50%; background: #232734; }
+    .terminal-body { padding: 14px 16px; font-family: var(--font-mono); font-size: 0.74rem; color: #9ca3af; overflow-y: auto; max-height: 420px; display: flex; flex-direction: column; gap: 6px; }
+    .t-row { display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; }
+    .t-time { color: var(--text-muted); flex-shrink: 0; }
+    .t-tag-sec { color: var(--danger); font-weight: 700; }
+    .t-tag-perf { color: var(--warning); font-weight: 700; }
+    .t-tag-arch { color: var(--cyan); font-weight: 700; }
+    .t-tag-succ { color: var(--success); font-weight: 700; }
+
+    /* Executive Markdown Report Tab */
+    .markdown-surface { padding: 24px 30px; line-height: 1.6; color: #d1d5db; }
+    .markdown-surface h1 { font-size: 1.25rem; color: #fff; font-weight: 700; margin-top: 14px; margin-bottom: 8px; font-family: var(--font-display); }
+    .markdown-surface h2 { font-size: 1.1rem; color: #fff; font-weight: 700; margin-top: 16px; margin-bottom: 10px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; font-family: var(--font-display); }
+    .markdown-surface h3 { font-size: 0.95rem; color: #f3f4f6; font-weight: 600; margin-top: 18px; margin-bottom: 10px; font-family: var(--font-display); }
+    .markdown-surface code { font-family: var(--font-mono); font-size: 0.78rem; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+
+    /* Modals & Dialogs */
+    .dialog-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 999; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .dialog-backdrop.active { display: flex; }
+    .dialog-window { background: #0f1117; border: 1px solid var(--border-active); border-radius: var(--radius-xl); width: 100%; max-width: 520px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 32px rgba(245, 158, 11, 0.15); overflow: hidden; display: flex; flex-direction: column; }
+    .dialog-header { padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
+    .dialog-title-group { display: flex; align-items: center; gap: 12px; }
+    .dialog-icon-box { width: 38px; height: 38px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--accent); }
+    .dialog-title-group h2 { font-size: 1rem; font-weight: 700; color: #fff; font-family: var(--font-display); }
+    .dialog-title-group p { font-size: 0.74rem; color: var(--text-secondary); margin-top: 2px; font-family: var(--font-mono); }
+    .btn-dialog-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+    .btn-dialog-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+    .dialog-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+    .form-group { display: flex; flex-direction: column; gap: 7px; }
+    .form-label { font-size: 0.74rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; font-family: var(--font-mono); }
+    .dialog-select { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: #fff; font-size: 0.82rem; font-weight: 600; padding: 10px 14px; border-radius: var(--radius-md); outline: none; cursor: pointer; font-family: var(--font-mono); }
+    .dialog-select:focus { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+    .dialog-select option { background: #0f1117; color: #fff; }
+    .key-input-container { display: flex; align-items: center; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0 12px; }
+    .key-input-container:focus-within { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+    .dialog-input { flex-grow: 1; background: transparent; border: none; color: #fff; font-family: var(--font-mono); font-size: 0.82rem; padding: 11px 0; outline: none; }
+    .icon-toggle-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .icon-toggle-btn:hover { color: #fff; }
+    .security-callout { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-md); padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; }
+    .security-callout-text { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.5; }
+    .security-callout-text strong { color: #fff; }
+    .dialog-footer { padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: rgba(0, 0, 0, 0.25); display: flex; align-items: center; justify-content: space-between; }
+    .btn-dialog-secondary { background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 9px 16px; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: var(--font-mono); }
+    .btn-dialog-secondary:hover { color: #fff; background: rgba(255, 255, 255, 0.05); border-color: var(--border-active); }
+    .btn-dialog-primary { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #08090c; border: 1px solid rgba(251, 191, 36, 0.4); padding: 9px 20px; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); font-family: var(--font-display); }
+    .btn-chip { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.72rem; padding: 5px 10px; border-radius: var(--radius-sm); cursor: pointer; }
+    .btn-chip:hover { background: var(--accent-surface); border-color: rgba(245, 158, 11, 0.4); color: #fff; }
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(0, 0, 0, 0.3); border-top-color: #08090c; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    /* File & Code Selector Bar */
+    .file-selector-bar {
+      background: rgba(15, 17, 23, 0.95);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .file-selector-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.72rem;
+    }
+    .file-pills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .file-pill-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .file-pill-btn:hover {
+      background: var(--bg-surface-hover);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fff;
+    }
+    .file-pill-btn.active {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: #f59e0b;
+      color: #fbbf24;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+    }
+    .stat-add { color: var(--success); font-weight: 600; }
+    .stat-del { color: var(--danger); font-weight: 600; }
+
+    /* Critical Code Hotspots in Diff Header */
+    .diff-header-hotspots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      margin: 0 16px;
+      overflow-x: auto;
+      padding: 2px 0;
+      scrollbar-width: none;
+    }
+    .diff-header-hotspots::-webkit-scrollbar { display: none; }
+    .hotspot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--danger);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .hotspot-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+      animation: pulse-beacon 1.4s infinite;
+      display: inline-block;
+    }
+    .hotspot-chip {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 5px;
+      padding: 3px 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #fecaca;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .hotspot-chip:hover {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: var(--danger);
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+      color: #fff;
+    }
+    .hotspot-chip .chip-line-tag {
+      font-weight: 800;
+      color: #fff;
+      background: rgba(239, 68, 68, 0.45);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .hotspot-chip.warning {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fef3c7;
+    }
+    .hotspot-chip.warning:hover {
+      background: rgba(245, 158, 11, 0.22);
+      border-color: var(--warning);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+    }
+    .hotspot-chip.warning .chip-line-tag {
+      background: rgba(245, 158, 11, 0.45);
+    }
+
+    /* Dashboard Critical Breaches Deck */
+    .dashboard-critical-deck {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.09) 0%, rgba(13, 16, 23, 0.95) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.32);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 24px rgba(239, 68, 68, 0.12);
+      animation: fadeIn 0.3s ease;
+    }
+    .deck-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+      padding-bottom: 10px;
+    }
+    .deck-title-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .crit-pulse-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--danger);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(239, 68, 68, 0.16);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+    .crit-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+      animation: pulse-beacon 1.4s infinite;
+      display: inline-block;
+    }
+    .deck-subtitle {
+      font-size: 0.76rem;
+      color: #e5e7eb;
+      font-family: var(--font-display);
+    }
+    .deck-title-hint {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dashboard-critical-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 10px;
+    }
+    .crit-card {
+      background: #090c12;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .crit-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+    }
+    .crit-card:hover {
+      border-color: var(--danger);
+      background: #0e131d;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.22);
+    }
+    .crit-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .crit-card-loc {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .crit-card-line-badge {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+    .crit-card-action {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .crit-card:hover .crit-card-action {
+      color: #fff;
+      text-decoration: underline;
+    }
+    .crit-card-rule {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #f3f4f6;
+      font-family: var(--font-display);
+      line-height: 1.35;
+    }
+    .crit-card-code-preview {
+      background: #050608;
+      border: 1px solid #1a1e29;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #fca5a5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Diff Row Highlight & Pulse */
+    .diff-row.has-critical-error {
+      background: rgba(239, 68, 68, 0.16) !important;
+    }
+    .diff-row.has-critical-error .diff-gutter {
+      color: #ef4444 !important;
+      font-weight: 800;
+      background: rgba(239, 68, 68, 0.2) !important;
+    }
+    .diff-row.has-critical-error .diff-symbol {
+      color: #ef4444 !important;
+      font-weight: 800;
+    }
+    @keyframes pulseRow {
+      0% { background: rgba(245, 158, 11, 0.7); outline: 2px solid var(--accent); }
+      40% { background: rgba(239, 68, 68, 0.6); outline: 2px solid var(--danger); }
+      100% { background: rgba(239, 68, 68, 0.16); outline: none; }
+    }
+    .diff-row.jump-highlight {
+      animation: pulseRow 2.2s ease-out;
+    }
+
+    /* File Selector Pill Critical Error Badges */
+    .pill-crit-badge {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.66rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 2px;
+    }
+    .pill-crit-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--danger);
+      display: inline-block;
+    }
+  </style>
+
+  <!-- CDNs: GSAP & Three.js with robust fallback -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-  <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
 
-  <!-- Three.js Ambient Particle Space Canvas -->
-  <canvas id="bg-canvas"></canvas>
-
   <div class="app-shell">
     
-    <!-- 1. Top Navigation Bar -->
+    <!-- 1. Top Navigation Bar: Tactical Robot Command Console -->
     <header class="top-nav">
       <div class="nav-brand">
         <div class="brand-icon">
-          <img src="/static/logo.png" alt="Autonomous PR Reviewer Logo" class="brand-logo-img" />
+          <!-- Inline Robot SVG: 100% Offline Guaranteed -->
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" y1="16" x2="8" y2="16"></line>
+            <line x1="16" y1="16" x2="16" y2="16"></line>
+          </svg>
         </div>
         <div class="brand-meta">
           <h1>
-            Autonomous PR Reviewer
-            <span class="branch-badge">
-              <i data-lucide="git-pull-request" style="width: 11px; height: 11px;"></i>
-              PR #42
-            </span>
+            SENTINEL // AUTONOMOUS PR REVIEWER
+            <span class="branch-badge">PR #42</span>
+            <span class="bot-unit-badge">BOT-01 ARMED</span>
           </h1>
-          <p>
-            LangGraph StateMachine &bull; Multi-Agent Consensus &bull; Pydantic v2
-          </p>
+          <p>Autonomous Multi-Agent Code Intelligence &bull; Deep AST &bull; Pydantic v2</p>
         </div>
       </div>
 
       <div class="nav-actions">
-        <!-- Live GitHub PR Import Button (Emerald Green with Logo) -->
+        <!-- Live GitHub PR Import Button -->
         <button id="btnOpenGitHubModal" class="github-nav-btn" title="Import live pull request from GitHub">
-          <svg class="github-logo-svg" viewBox="0 0 24 24" width="14" height="14">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
           <span id="ghNavBtnText">Import GitHub PR</span>
-          <span id="ghActiveDot" class="status-dot" style="display: none; background: #3fb950; box-shadow: 0 0 8px #3fb950;"></span>
+          <span id="ghActiveDot" class="status-dot" style="display: none; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
         </button>
 
         <!-- Interactive BYOK Vault Pill -->
         <button id="openSettingsBtn" class="vault-pill" title="Configure AI Model & API Key">
           <span id="navEngineDot" class="status-dot"></span>
-          <i data-lucide="key" style="width: 13px; height: 13px; color: var(--accent);"></i>
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2">
+            <path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5m-3 3L4 14l-2 6 6-2 3.5-3.5"></path>
+            <circle cx="15.5" cy="8.5" r="2.5"></circle>
+          </svg>
           <span id="navEngineLabel">Google Gemini (gemini-2.5-flash)</span>
-          <i data-lucide="chevron-down" style="width: 12px; height: 12px; color: var(--text-muted);"></i>
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
       </div>
     </header>
@@ -70,26 +1119,31 @@
     <div class="control-ribbon">
       <div class="preset-selector-group">
         <button class="preset-tab active" data-preset="sql_injection">
-          <i data-lucide="file-code" style="width: 13px; height: 13px;"></i>
+          <span class="preset-idx">[01]</span>
           <span>users.py</span>
           <span class="stat-pill danger">+12 -3</span>
         </button>
         <button class="preset-tab" data-preset="performance_leak">
-          <i data-lucide="file-code" style="width: 13px; height: 13px;"></i>
+          <span class="preset-idx">[02]</span>
           <span>analytics.py</span>
           <span class="stat-pill warning">+8 -1</span>
         </button>
         <button class="preset-tab" data-preset="clean_pr">
-          <i data-lucide="file-code" style="width: 13px; height: 13px;"></i>
+          <span class="preset-idx">[03]</span>
           <span>math.py</span>
           <span class="stat-pill success">+4 -2</span>
         </button>
+        <button class="preset-tab" data-preset="testing_sentinel" title="Testing SENTINEL (8 Codes Multi-File Benchmark)">
+          <span class="preset-idx" style="color: var(--accent);">[04]</span>
+          <span style="font-weight: 700; color: #fff;">Testing SENTINEL</span>
+          <span class="stat-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">8 Codes</span>
+        </button>
         <button class="preset-tab" id="btnNewBlankDiff" title="Start with a blank buffer to paste custom code">
-          <i data-lucide="file-plus" style="width: 13px; height: 13px; color: var(--accent);"></i>
+          <span style="color: var(--accent);">[+]</span>
           <span>New Blank Diff</span>
         </button>
         <button class="preset-tab" id="toggleCustomDiffBtn" title="Toggle raw editor for active diff">
-          <i data-lucide="terminal" style="width: 13px; height: 13px;"></i>
+          <span>[&gt;_]</span>
           <span>Edit Raw Diff</span>
         </button>
       </div>
@@ -97,22 +1151,50 @@
       <div class="audit-action-group">
         <button id="runAuditBtn" class="btn-run-audit">
           <span id="auditSpinner" class="spinner"></span>
-          <i id="auditPlayIcon" data-lucide="play" style="width: 14px; height: 14px;"></i>
-          <span id="auditBtnText">Run Multi-Agent Audit</span>
+          <svg id="auditPlayIcon" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span id="auditBtnText">Dispatch Robot Audit</span>
           <span class="shortcut-tag">&#8984; Enter</span>
         </button>
       </div>
     </div>
 
-    <!-- 3. Executive Verdict & Telemetry Strip -->
+    <!-- 3. Executive Verdict & AI Robot Cockpit Strip -->
     <div class="executive-strip">
+      <!-- 3D & 2D Animated AI Robot Sentinel Unit -->
+      <div class="sentinel-robot-unit">
+        <div class="robot-canvas-container">
+          <canvas id="robot-canvas" width="86" height="86"></canvas>
+          <div id="robotFallbackVisor" class="robot-visor-scanner">
+            <div class="robot-visor-eye">
+              <div class="robot-visor-pupil"></div>
+            </div>
+          </div>
+          <div class="robot-target-bracket tl"></div>
+          <div class="robot-target-bracket tr"></div>
+          <div class="robot-target-bracket bl"></div>
+          <div class="robot-target-bracket br"></div>
+        </div>
+        <div class="robot-hud-meta">
+          <div class="robot-callsign">
+            <span class="robot-beacon"></span>
+            <span class="robot-name" id="robotNameLabel">AI BOT // SENTINEL-01</span>
+          </div>
+          <div class="robot-state-badge" id="robotStateText">SYS: STANDBY</div>
+          <div class="robot-telemetry-micro">
+            <span>TRACKING: ACTIVE</span> &bull; <span id="robotCoreEngine">CORE: ONLINE</span>
+          </div>
+        </div>
+      </div>
+
       <div class="verdict-info">
         <div id="verdictBadge" class="verdict-status-badge STANDBY">
-          <i id="verdictIcon" data-lucide="play-circle" style="width: 14px; height: 14px;"></i>
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
           <span id="verdictText">Ready to Audit</span>
         </div>
         <div class="verdict-headline" id="verdictHeadline">
-          Click <strong>Run Multi-Agent Audit</strong> (or press <strong>&#8984; Enter</strong>) to dispatch parallel specialist agents.
+          Click <strong>Dispatch Robot Audit</strong> (or press <strong>&#8984; Enter</strong>) to activate parallel autonomous bot agents.
         </div>
       </div>
 
@@ -136,50 +1218,65 @@
       </div>
     </div>
 
+    <!-- 3.5 Dedicated Dashboard Critical Problems Hotline Deck -->
+    <div id="dashboardCriticalDeck" class="dashboard-critical-deck" style="display: none;">
+      <div class="deck-title-bar">
+        <div class="deck-title-left">
+          <span class="crit-pulse-pill"><span class="crit-pulse-dot"></span>CRITICAL CODE VULNERABILITIES</span>
+          <span class="deck-subtitle" id="dashboardCriticalCountLabel">Lines Flagged with Severe Vulnerabilities</span>
+        </div>
+        <div class="deck-title-hint">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          Click any card to jump directly to code line & fix
+        </div>
+      </div>
+      <div id="dashboardCriticalCardsGrid" class="dashboard-critical-grid"></div>
+    </div>
+
     <!-- Real-Time Parallel Specialist Agent Orchestration HUD -->
     <div class="active-agent-hud">
       <div class="hud-agent-cell" id="hudSecCell">
         <div class="hud-agent-header">
           <div class="hud-agent-title">
             <span class="hud-dot" id="hudDotSec"></span>
-            <i data-lucide="shield-alert" style="width: 13px; height: 13px; color: var(--danger);"></i>
-            <span>Security Specialist</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--danger)" fill="none" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>BOT SEC-9 // Security Sentinel</span>
           </div>
           <span class="hud-agent-status" id="hudStateSec">Standby</span>
         </div>
-        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgSec"></div></div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgSec" style="background: var(--danger);"></div></div>
       </div>
 
       <div class="hud-agent-cell" id="hudPerfCell">
         <div class="hud-agent-header">
           <div class="hud-agent-title">
             <span class="hud-dot" id="hudDotPerf"></span>
-            <i data-lucide="gauge" style="width: 13px; height: 13px; color: var(--warning);"></i>
-            <span>Performance Specialist</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--warning)" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            <span>BOT PERF-X // Latency Profiler</span>
           </div>
           <span class="hud-agent-status" id="hudStatePerf">Standby</span>
         </div>
-        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgPerf"></div></div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgPerf" style="background: var(--warning);"></div></div>
       </div>
 
       <div class="hud-agent-cell" id="hudArchCell">
         <div class="hud-agent-header">
           <div class="hud-agent-title">
             <span class="hud-dot" id="hudDotArch"></span>
-            <i data-lucide="boxes" style="width: 13px; height: 13px; color: var(--accent);"></i>
-            <span>Architecture Specialist</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--cyan)" fill="none" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+            <span>BOT ARCH-V // System Architect</span>
           </div>
           <span class="hud-agent-status" id="hudStateArch">Standby</span>
         </div>
-        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgArch"></div></div>
+        <div class="hud-meter-track"><div class="hud-meter-fill" id="hudProgArch" style="background: var(--cyan);"></div></div>
       </div>
 
       <div class="hud-agent-cell" id="hudSynthCell">
         <div class="hud-agent-header">
           <div class="hud-agent-title">
             <span class="hud-dot" id="hudDotSynth"></span>
-            <i data-lucide="git-merge" style="width: 13px; height: 13px; color: var(--purple);"></i>
-            <span>Consensus Guardrail</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--purple)" fill="none" stroke-width="2"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+            <span>CONSENSUS CORE // Arbiter</span>
           </div>
           <span class="hud-agent-status" id="hudStateSynth">Pydantic v2</span>
         </div>
@@ -191,27 +1288,27 @@
     <div class="workspace-nav">
       <div class="nav-tabs-list">
         <button class="workspace-tab-btn active" data-tab="tab-diff">
-          <i data-lucide="code" style="width: 14px; height: 14px;"></i>
+          <span class="tab-idx">[01]</span>
           <span>Diff & Inline Annotations</span>
           <span class="tab-badge" id="findingsBadge">Standby</span>
         </button>
         <button class="workspace-tab-btn" data-tab="tab-telemetry">
-          <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+          <span class="tab-idx">[02]</span>
           <span>Agent Telemetry HUD</span>
         </button>
         <button class="workspace-tab-btn" data-tab="tab-summary">
-          <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+          <span class="tab-idx">[03]</span>
           <span>Executive Report</span>
         </button>
       </div>
 
-      <div class="workspace-tab-actions" style="display: flex; gap: 8px;">
+      <div class="workspace-tab-actions">
         <button id="copyReviewBtn" class="btn-secondary" style="display: none;">
-          <i data-lucide="copy" style="width: 13px; height: 13px;"></i>
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           <span>Copy PR Report</span>
         </button>
         <button id="btnPublishGitHub" class="btn-secondary" style="display: none;">
-          <i data-lucide="send" style="width: 13px; height: 13px; color: var(--accent);"></i>
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--accent)" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           <span id="btnPublishGitHubText">Publish to GitHub</span>
         </button>
       </div>
@@ -224,14 +1321,32 @@
         <div class="surface-card">
           <div class="diff-file-header">
             <div class="diff-file-title">
-              <i data-lucide="file-diff" style="width: 14px; height: 14px; color: var(--accent);"></i>
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--accent)" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
               <span id="activeFilePath">app/routes/users.py</span>
             </div>
+            
+            <!-- Critical Code Hotspots Bar (Fills the wide space in the header line) -->
+            <div id="diffHeaderHotspots" class="diff-header-hotspots" style="display: none;"></div>
+
             <div class="diff-file-stats">
-              <span>Unified View</span>
+              <span id="diffFilesCountBadge" style="display: none; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;"></span>
+              <span id="diffViewScopeLabel">Tactical Unified View</span>
               &bull;
-              <span style="color: var(--text-muted);">Python 3.12</span>
+              <span style="color: var(--text-muted);" id="diffEngineTag">Python 3.12 AST</span>
             </div>
+          </div>
+
+          <!-- Interactive File & Code Navigator for Multi-Code Repos -->
+          <div id="fileSelectorBar" class="file-selector-bar" style="display: none;">
+            <div class="file-selector-meta">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--accent)" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span style="font-weight: 700; color: #fff; letter-spacing: 0.04em;">CHANGED CODES IN REPOSITORY:</span>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">(Click any code to isolate and review)</span>
+              </div>
+              <div id="fileFilterSummary" style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--accent);"></div>
+            </div>
+            <div id="filePillsList" class="file-pills-list"></div>
           </div>
 
           <div id="diffCodeContainer" class="diff-code-wrapper"></div>
@@ -246,21 +1361,21 @@
             <!-- Left: Parallel Specialist Workers -->
             <div class="worker-stack-card">
               <div class="worker-panel-header">
-                <i data-lucide="layers" style="width: 13px; height: 13px;"></i>
-                Parallel Specialist Threads
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--accent)" fill="none" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                Autonomous Specialist Bot Squad
               </div>
 
               <!-- Security Specialist -->
               <div class="worker-unit">
                 <div class="worker-meta">
                   <div class="worker-name">
-                    <i data-lucide="shield-alert" style="width: 14px; height: 14px; color: var(--danger);"></i>
-                    Security Specialist
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--danger)" fill="none" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    BOT SEC-9 // Security Sentinel
                   </div>
                   <span id="stateSec" class="worker-state">Idle</span>
                 </div>
                 <div class="worker-meter-track">
-                  <div id="progSec" class="worker-meter-fill"></div>
+                  <div id="progSec" class="worker-meter-fill" style="background: var(--danger);"></div>
                 </div>
               </div>
 
@@ -268,13 +1383,13 @@
               <div class="worker-unit">
                 <div class="worker-meta">
                   <div class="worker-name">
-                    <i data-lucide="gauge" style="width: 14px; height: 14px; color: var(--warning);"></i>
-                    Performance Specialist
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--warning)" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                    BOT PERF-X // Latency Profiler
                   </div>
                   <span id="statePerf" class="worker-state">Idle</span>
                 </div>
                 <div class="worker-meter-track">
-                  <div id="progPerf" class="worker-meter-fill"></div>
+                  <div id="progPerf" class="worker-meter-fill" style="background: var(--warning);"></div>
                 </div>
               </div>
 
@@ -282,13 +1397,13 @@
               <div class="worker-unit">
                 <div class="worker-meta">
                   <div class="worker-name">
-                    <i data-lucide="boxes" style="width: 14px; height: 14px; color: var(--accent);"></i>
-                    Architecture Specialist
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--cyan)" fill="none" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                    BOT ARCH-V // System Architect
                   </div>
                   <span id="stateArch" class="worker-state">Idle</span>
                 </div>
                 <div class="worker-meter-track">
-                  <div id="progArch" class="worker-meter-fill"></div>
+                  <div id="progArch" class="worker-meter-fill" style="background: var(--cyan);"></div>
                 </div>
               </div>
 
@@ -296,8 +1411,8 @@
               <div class="worker-unit" style="margin-top: 6px;">
                 <div class="worker-meta">
                   <div class="worker-name">
-                    <i data-lucide="git-merge" style="width: 14px; height: 14px; color: var(--purple);"></i>
-                    Consensus Synthesizer
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--purple)" fill="none" stroke-width="2"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+                    CONSENSUS CORE // Arbiter
                   </div>
                   <span id="stateSynth" class="worker-state">Pydantic v2 Guardrail</span>
                 </div>
@@ -315,13 +1430,13 @@
                   <div class="term-dot"></div>
                   <div class="term-dot"></div>
                 </div>
-                <span>orchestrator.telemetry.log</span>
+                <span>sentinel.telemetry.log</span>
                 <span id="engineBadgeText" style="color: var(--accent); font-weight: 700;">Google Gemini 3.8 Flash</span>
               </div>
               <div id="terminalFeed" class="terminal-body">
                 <div class="t-row">
                   <span class="t-time">00:00:00</span>
-                  <span>System standby. Click "Run Multi-Agent Audit" to trigger state graph.</span>
+                  <span>System standby. Click "Dispatch Robot Audit" to trigger state graph.</span>
                 </div>
               </div>
             </div>
@@ -343,13 +1458,13 @@
 
   </div>
 
-  <!-- 6. Onboarding / BYOK Settings Dialog (Linear / Raycast Style) -->
+  <!-- 6. Onboarding / BYOK Settings Dialog -->
   <div id="settingsDialog" class="dialog-backdrop">
     <div class="dialog-window">
       <div class="dialog-header">
         <div class="dialog-title-group">
           <div class="dialog-icon-box">
-            <i data-lucide="cpu" style="width: 20px; height: 20px;"></i>
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line></svg>
           </div>
           <div>
             <h2>Configure Intelligence Engine</h2>
@@ -357,7 +1472,7 @@
           </div>
         </div>
         <button id="closeSettingsBtn" class="btn-dialog-close" title="Close dialog">
-          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
@@ -379,13 +1494,12 @@
           <div class="key-input-container">
             <input type="password" id="dialogKeyInput" class="dialog-input" placeholder="Paste your Gemini or OpenAI API key..." />
             <button id="dialogToggleEyeBtn" class="icon-toggle-btn" title="Toggle visibility">
-              <i id="dialogEyeIcon" data-lucide="eye" style="width: 15px; height: 15px;"></i>
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
           </div>
         </div>
 
         <div class="security-callout">
-          <i data-lucide="shield" style="width: 16px; height: 16px;"></i>
           <div class="security-callout-text">
             <strong>Client-Side Vault Guarantee:</strong> Your key is stored exclusively in your browser's local sandbox (LocalStorage) and dispatched directly to the model endpoint. No database or intermediary proxy stores your secrets.
           </div>
@@ -393,12 +1507,8 @@
       </div>
 
       <div class="dialog-footer">
-        <button id="btnOfflineDemo" class="btn-dialog-secondary">
-          Continue with Offline AST Engine
-        </button>
-        <button id="btnSaveKey" class="btn-dialog-primary">
-          Save & Connect
-        </button>
+        <button id="btnOfflineDemo" class="btn-dialog-secondary">Continue with Offline AST Engine</button>
+        <button id="btnSaveKey" class="btn-dialog-primary">Save & Connect</button>
       </div>
     </div>
   </div>
@@ -419,19 +1529,19 @@
           </div>
         </div>
         <button id="closeGitHubBtn" class="btn-dialog-close" title="Close dialog">
-          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
       <div class="dialog-body">
         <div class="form-group">
           <label class="form-label" for="ghRepoInput">Repository or PR URL</label>
-          <input type="text" id="ghRepoInput" class="dialog-select" style="font-family: var(--font-mono); font-size: 0.8rem;" placeholder="e.g. pallets/flask or https://github.com/pallets/flask/pull/5000" />
+          <input type="text" id="ghRepoInput" class="dialog-select" placeholder="e.g. pallets/flask or https://github.com/pallets/flask/pull/5000" />
         </div>
 
         <div class="form-group" id="ghPrNumberGroup">
           <label class="form-label" for="ghPrNumberInput">Pull Request Number</label>
-          <input type="number" id="ghPrNumberInput" class="dialog-select" style="font-family: var(--font-mono); font-size: 0.8rem;" placeholder="e.g. 5000" />
+          <input type="number" id="ghPrNumberInput" class="dialog-select" placeholder="e.g. 5000" />
         </div>
 
         <div class="form-group">
@@ -439,7 +1549,7 @@
           <div class="key-input-container">
             <input type="password" id="ghTokenInput" class="dialog-input" placeholder="ghp_... (Stored locally; required for private repos or reviews)" />
             <button id="ghToggleTokenEyeBtn" class="icon-toggle-btn" title="Toggle visibility">
-              <i id="ghEyeIcon" data-lucide="eye" style="width: 15px; height: 15px;"></i>
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
           </div>
         </div>
@@ -447,21 +1557,20 @@
         <div class="form-group">
           <label class="form-label">Quick Public PR Demos</label>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" class="btn-chip" style="border-color: rgba(88, 166, 255, 0.4); background: rgba(88, 166, 255, 0.1); color: #58a6ff; font-weight: 600;" data-repo="keshav647/testing" data-pr="1">keshav647/testing #1 (Live Test Repo)</button>
+            <button type="button" class="btn-chip" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.12); color: #fbbf24; font-weight: 600;" data-repo="keshav647/testing" data-pr="1">Testing SENTINEL (keshav647/testing #1)</button>
             <button type="button" class="btn-chip" data-repo="pallets/flask" data-pr="5000">pallets/flask #5000</button>
             <button type="button" class="btn-chip" data-repo="tiangolo/fastapi" data-pr="11000">tiangolo/fastapi #11000</button>
             <button type="button" class="btn-chip" data-repo="psf/requests" data-pr="6000">psf/requests #6000</button>
           </div>
         </div>
 
-        <div id="ghFetchError" style="display: none; color: var(--danger); font-size: 0.78rem; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: var(--radius-sm); padding: 8px 12px;"></div>
+        <div id="ghFetchError" style="display: none; color: var(--danger); font-size: 0.78rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 8px 12px;"></div>
       </div>
 
       <div class="dialog-footer">
         <button id="btnCancelGitHub" class="btn-dialog-secondary">Cancel</button>
         <button id="btnSubmitGitHubFetch" class="btn-dialog-primary" style="display: flex; align-items: center; gap: 8px;">
           <span id="ghFetchSpinner" class="spinner" style="display: none; width: 14px; height: 14px; border-width: 2px;"></span>
-          <i id="ghFetchIcon" data-lucide="download" style="width: 14px; height: 14px;"></i>
           <span id="ghFetchBtnText">Fetch Live PR</span>
         </button>
       </div>
@@ -473,8 +1582,8 @@
     <div class="dialog-window">
       <div class="dialog-header">
         <div class="dialog-title-group">
-          <div class="dialog-icon-box" style="background: rgba(88, 166, 255, 0.1); border-color: rgba(88, 166, 255, 0.3); color: var(--accent);">
-            <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+          <div class="dialog-icon-box" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--accent);">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </div>
           <div>
             <h2>Publish Multi-Agent Review</h2>
@@ -482,7 +1591,7 @@
           </div>
         </div>
         <button id="closeGHPublishBtn" class="btn-dialog-close" title="Close dialog">
-          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
@@ -519,14 +1628,13 @@
         <button id="btnCancelGHPublish" class="btn-dialog-secondary">Cancel</button>
         <button id="btnConfirmPublish" class="btn-dialog-primary" style="display: flex; align-items: center; gap: 8px;">
           <span id="ghPublishSpinner" class="spinner" style="display: none; width: 14px; height: 14px; border-width: 2px;"></span>
-          <i id="ghPublishIcon" data-lucide="check-circle" style="width: 14px; height: 14px;"></i>
           <span id="btnConfirmPublishText">Submit Review</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Application Logic -->
-  <script src="/static/js/app.js"></script>
+  <!-- Application Logic with cache-busting query parameter -->
+  <script src="/static/js/app.js?v=9.0"></script>
 </body>
 </html>

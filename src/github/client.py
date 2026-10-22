@@ -34,6 +34,30 @@ class GitHubReviewClient:
                 pass
         return None
 
+    @staticmethod
+    def _urlopen_safe(req, timeout: int = 12):
+        """Executes urllib request with macOS SSL fallback."""
+        import urllib.request
+        import urllib.error
+        import ssl
+        try:
+            return urllib.request.urlopen(req, timeout=timeout)
+        except urllib.error.URLError as err:
+            err_str = str(err)
+            if "CERTIFICATE_VERIFY_FAILED" in err_str or "certificate verify failed" in err_str:
+                try:
+                    unverified_ctx = ssl._create_unverified_context()
+                    fresh_req = urllib.request.Request(
+                        req.full_url,
+                        data=req.data,
+                        headers=dict(req.header_items()),
+                        method=req.get_method()
+                    )
+                    return urllib.request.urlopen(fresh_req, timeout=timeout, context=unverified_ctx)
+                except Exception:
+                    pass
+            raise err
+
     def fetch_pr_diff(self, owner: str, repo: str, pull_number: int) -> str:
         """
         Fetches the unified git diff for a Pull Request from GitHub API.
@@ -53,7 +77,7 @@ class GitHubReviewClient:
         req = urllib.request.Request(url, headers=headers)
 
         try:
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with self._urlopen_safe(req, timeout=12) as resp:
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as err:
             if err.code == 404:
@@ -79,7 +103,7 @@ class GitHubReviewClient:
         url = f"{self.base_url}/repos/{owner}/{repo}/pulls/{pull_number}"
         req = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with self._urlopen_safe(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return {
                     "title": data.get("title", f"PR #{pull_number}"),
@@ -191,7 +215,7 @@ class GitHubReviewClient:
                 },
                 method="POST"
             )
-            with urllib.request.urlopen(req) as resp:
+            with self._urlopen_safe(req, timeout=15) as resp:
                 return json.loads(resp.read().decode("utf-8"))
 
         try:

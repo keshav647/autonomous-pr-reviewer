@@ -55,17 +55,17 @@ class SpecialistEngine:
                 line_num = line.new_line_number or 1
                 content = line.content
 
-                # Check SQL Injection
-                if re.search(r"f[\"'].*?(SELECT|INSERT|UPDATE|DELETE).*?\{.*?\}", content, re.IGNORECASE):
+                # Check SQL Injection (f-string, format, % or concatenation)
+                if re.search(r"(?:f[\"'].*?(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|WHERE).*?\{.*?\}|[\"'].*?(SELECT|INSERT|UPDATE|DELETE|WHERE).*?[\"']\s*%\s*\w+|\.format\(.*?\)|[\"'].*?(SELECT|INSERT|UPDATE|DELETE|WHERE).*?[\"']\s*\+\s*\w+)", content, re.IGNORECASE):
                     findings.append(ReviewComment(
                         file_path=file_diff.new_path,
                         line_number=line_num,
                         severity="CRITICAL",
                         category="SECURITY",
-                        issue_summary="Potential SQL Injection via f-string dynamic query construction.",
+                        issue_summary="Potential SQL Injection via unparameterized dynamic query construction.",
                         detailed_explanation=(
                             f"The query in `{file_diff.new_path}` at line {line_num} directly formats unvalidated "
-                            "user input into a raw SQL statement, allowing attackers to manipulate queries via SQL injection."
+                            "user input into a raw SQL statement, allowing attackers to manipulate queries via SQL injection (CWE-89)."
                         ),
                         suggested_diff_fix=(
                             f"-    {content.strip()}\n"
@@ -74,25 +74,33 @@ class SpecialistEngine:
                         )
                     ))
 
-                # Check Hardcoded Secrets
-                secret_match = re.search(r'(?:api_key|token|secret|password|private_key)\s*=\s*["\']([a-zA-Z0-9_\-]{16,})["\']', content, re.IGNORECASE)
-                if secret_match:
-                    findings.append(ReviewComment(
-                        file_path=file_diff.new_path,
-                        line_number=line_num,
-                        severity="CRITICAL",
-                        category="SECURITY",
-                        issue_summary="Hardcoded secret or sensitive token detected.",
-                        detailed_explanation=(
-                            f"Line {line_num} contains a plaintext secret. Hardcoded credentials checked into version "
-                            "control can easily be scraped and lead to account compromise."
-                        ),
-                        suggested_diff_fix=(
-                            f"-    {content.strip()}\n"
-                            f"+    import os\n"
-                            f"+    api_key = os.getenv(\"API_KEY\")"
-                        )
-                    ))
+                # Check Hardcoded Secrets & High-Entropy Credentials
+                secret_patterns = [
+                    (r'(?:api_key|token|secret|password|private_key|jwt_secret)\s*=\s*["\']([a-zA-Z0-9_\-]{14,})["\']', "Hardcoded secret or sensitive token detected (CWE-798)."),
+                    (r'AKIA[0-9A-Z]{16}', "Hardcoded AWS Access Key ID detected."),
+                    (r'gh[pous]_[a-zA-Z0-9]{36}', "Hardcoded GitHub Personal Access Token detected."),
+                    (r'(?:sk|rk)_live_[0-9a-zA-Z]{24,}', "Hardcoded Stripe Live Secret Key detected."),
+                    (r'-----BEGIN (?:RSA )?PRIVATE KEY-----', "Embedded cryptographic private key detected.")
+                ]
+                for pattern, desc in secret_patterns:
+                    if re.search(pattern, content, re.IGNORECASE):
+                        findings.append(ReviewComment(
+                            file_path=file_diff.new_path,
+                            line_number=line_num,
+                            severity="CRITICAL",
+                            category="SECURITY",
+                            issue_summary=desc,
+                            detailed_explanation=(
+                                f"Line {line_num} contains a plaintext credential. Hardcoded secrets checked into version "
+                                "control can easily be scraped, leading to infrastructure or data compromise."
+                            ),
+                            suggested_diff_fix=(
+                                f"-    {content.strip()}\n"
+                                f"+    import os\n"
+                                f"+    secret_val = os.getenv(\"CONFIGURED_SECRET_KEY\")"
+                            )
+                        ))
+                        break
 
                 # Check Dynamic Code Execution
                 if re.search(r"\b(eval|exec)\s*\(", content):
@@ -102,7 +110,7 @@ class SpecialistEngine:
                         severity="CRITICAL",
                         category="SECURITY",
                         issue_summary="Dangerous dynamic code execution (`eval`/`exec`).",
-                        detailed_explanation="Dynamic evaluation of code strings allows Remote Code Execution (RCE) if input is tainted.",
+                        detailed_explanation="Dynamic evaluation of code strings allows Remote Code Execution (RCE) if input is tainted (CWE-95).",
                         suggested_diff_fix=(
                             f"-    {content.strip()}\n"
                             f"+    # Refactor to use safe ast.literal_eval or json.loads\n"
@@ -112,15 +120,15 @@ class SpecialistEngine:
                     ))
 
                 # Check Command Injection / Insecure Subprocess Execution
-                if re.search(r"\b(os\.system|os\.popen|subprocess\.(?:Popen|run|call|check_output))\s*\((?!\s*[\"'][a-zA-Z0-9_\-\s./]*[\"']\s*\))", content, re.IGNORECASE):
+                if re.search(r"\b(os\.system|os\.popen|subprocess\.(?:Popen|run|call|check_output))\s*\((?!\s*[\"'][a-zA-Z0-9_\-\s./]*[\"']\s*\))", content, re.IGNORECASE) or ("shell=True" in content):
                     findings.append(ReviewComment(
                         file_path=file_diff.new_path,
                         line_number=line_num,
                         severity="CRITICAL",
                         category="SECURITY",
-                        issue_summary="Command Injection / Insecure Subprocess Execution vulnerability.",
+                        issue_summary="Command Injection / Insecure Subprocess Execution vulnerability (CWE-78).",
                         detailed_explanation=(
-                            f"Unsanitized command execution at line {line_num} invokes system shells with non-constant input, "
+                            f"Unsanitized command execution at line {line_num} invokes system shells with dynamic input, "
                             "permitting Remote Code Execution (RCE) and full server takeover."
                         ),
                         suggested_diff_fix=(
@@ -128,6 +136,85 @@ class SpecialistEngine:
                             f"+    # Use safe subprocess with argument lists and shell=False\n"
                             f"+    import subprocess\n"
                             f"+    subprocess.run([\"safe_binary\", validated_arg], check=True, shell=False)"
+                        )
+                    ))
+
+                # Check Path Traversal
+                if re.search(r"os\.path\.join\(.*,\s*(?:filename|filepath|user_path|path)\)", content) or re.search(r"open\(f?[\"'].*?\{.*?(?:file|path|name).*?\}.*?[\"']", content):
+                    if "os.path.abspath" not in content and "os.path.commonpath" not in content:
+                        findings.append(ReviewComment(
+                            file_path=file_diff.new_path,
+                            line_number=line_num,
+                            severity="CRITICAL",
+                            category="SECURITY",
+                            issue_summary="Potential Path Traversal / Arbitrary File Access vulnerability (CWE-22).",
+                            detailed_explanation=(
+                                f"Constructing filesystem paths from dynamic variables at line {line_num} without canonical path boundary verification "
+                                "allows attackers to supply `../` sequences and read/overwrite arbitrary files on the host."
+                            ),
+                            suggested_diff_fix=(
+                                f"-    {content.strip()}\n"
+                                f"+    # Canonicalize and verify directory boundary\n"
+                                f"+    safe_path = os.path.abspath(os.path.join(BASE_DIR, os.path.basename(filename)))\n"
+                                f"+    if not safe_path.startswith(os.path.abspath(BASE_DIR)):\n"
+                                f"+        raise ValueError(\"Path traversal detected\")"
+                            )
+                        ))
+
+                # Check Insecure Deserialization
+                if re.search(r"\b(pickle\.(?:loads?|load)|yaml\.load\((?!.*Loader=yaml\.SafeLoader))\b", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="CRITICAL",
+                        category="SECURITY",
+                        issue_summary="Insecure Deserialization vulnerability (CWE-502).",
+                        detailed_explanation=(
+                            f"Deserializing untrusted streams at line {line_num} using `pickle` or unconstrained `yaml.load` "
+                            "permits arbitrary object instantiation and Remote Code Execution."
+                        ),
+                        suggested_diff_fix=(
+                            f"-    {content.strip()}\n"
+                            f"+    import json\n"
+                            f"+    safe_data = json.loads(untrusted_payload)"
+                        )
+                    ))
+
+                # Check Weak Cryptography / Hashing
+                if re.search(r"\bhashlib\.(md5|sha1)\s*\(", content, re.IGNORECASE):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="WARNING",
+                        category="SECURITY",
+                        issue_summary="Use of cryptographically weak hash algorithm (MD5/SHA1, CWE-327).",
+                        detailed_explanation=(
+                            f"Hash algorithm at line {line_num} is collision-vulnerable. Use SHA-256 for integrity "
+                            "or Argon2/bcrypt/PBKDF2 for password storage."
+                        ),
+                        suggested_diff_fix=(
+                            f"-    {content.strip()}\n"
+                            f"+    import hashlib\n"
+                            f"+    secure_hash = hashlib.sha256(data.encode()).hexdigest()"
+                        )
+                    ))
+
+                # Check Insecure SSL/TLS Verification
+                if re.search(r"\bverify\s*=\s*False\b", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="WARNING",
+                        category="SECURITY",
+                        issue_summary="Disabled SSL/TLS Certificate Verification (CWE-295).",
+                        detailed_explanation=(
+                            f"Disabling certificate verification at line {line_num} allows Man-in-the-Middle (MITM) attacks "
+                            "where eavesdroppers can intercept and modify sensitive network traffic."
+                        ),
+                        suggested_diff_fix=(
+                            f"-    {content.strip()}\n"
+                            f"+    # Retain standard CA certificate verification\n"
+                            f"+    response = httpx.get(url, verify=True)"
                         )
                     ))
 
@@ -177,7 +264,7 @@ class SpecialistEngine:
                     loop_line = line_num
 
                 # Check N+1 database queries inside loop
-                if in_loop and re.search(r"\b(cursor\.execute|session\.query|\.get_user|\.find_by_id)\s*\(", content):
+                if in_loop and re.search(r"\b(cursor\.execute|session\.query|\.get_user|\.find_by_id|\.select)\s*\(", content):
                     findings.append(ReviewComment(
                         file_path=file_diff.new_path,
                         line_number=line_num,
@@ -230,6 +317,44 @@ class SpecialistEngine:
                         )
                     ))
 
+                # Check string concatenation accumulation inside loops
+                if in_loop and re.search(r"\w+\s*\+=\s*[\"'].*?[\"']", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="INFO",
+                        category="PERFORMANCE",
+                        issue_summary="Inefficient string concatenation in loop (O(N^2) memory reallocations).",
+                        detailed_explanation=(
+                            f"Accumulating strings with `+=` on line {line_num} creates intermediate string copies on every iteration. "
+                            "Use a list accumulator with `''.join(...)`."
+                        ),
+                        suggested_diff_fix=(
+                            f"-    {content}\n"
+                            f"+    chunks.append(item)\n"
+                            f"+    result = ''.join(chunks)"
+                        )
+                    ))
+
+                # Check repeated regex compilation in loop
+                if in_loop and re.search(r"\bre\.(?:compile|search|match|findall)\s*\(", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="INFO",
+                        category="PERFORMANCE",
+                        issue_summary="Repeated regular expression compilation inside loop.",
+                        detailed_explanation=(
+                            f"Compiling regex on line {line_num} repeatedly during iteration causes unnecessary CPU overhead. "
+                            "Pre-compile the pattern at module level."
+                        ),
+                        suggested_diff_fix=(
+                            f"-    {content}\n"
+                            f"+    # Pre-compile outside loop: PATTERN = re.compile(...)\n"
+                            f"+    PATTERN.search(item)"
+                        )
+                    ))
+
         return findings
 
     @classmethod
@@ -269,7 +394,7 @@ class SpecialistEngine:
                 content = line.content.strip()
 
                 # Check bare except: or except Exception: pass
-                if content == "except:" or re.search(r"except\s+Exception\s*:\s*pass", content):
+                if content == "except:" or re.search(r"except\s+(?:Exception)?\s*:\s*(?:pass|\.\.\.)", content):
                     findings.append(ReviewComment(
                         file_path=file_diff.new_path,
                         line_number=line_num,
@@ -300,6 +425,55 @@ class SpecialistEngine:
                         suggested_diff_fix=(
                             f"-    {content}\n"
                             f"+    from module import SpecificClass, specific_function"
+                        )
+                    ))
+
+                # Check mutable default arguments
+                if re.search(r"def\s+\w+\s*\(.*?(?:=\s*\[\]|=\s*\{\})\s*.*?\):", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="WARNING",
+                        category="ARCHITECTURE",
+                        issue_summary="Dangerous mutable default argument (`[]` or `{}`).",
+                        detailed_explanation=(
+                            f"Default parameter at line {line_num} is instantiated once at function definition time. "
+                            "Mutating it inside the function affects all subsequent calls."
+                        ),
+                        suggested_diff_fix=(
+                            f"-    {content}\n"
+                            f"+    def function_name(param: Optional[List] = None):\n"
+                            f"+        if param is None: param = []"
+                        )
+                    ))
+
+                # Check global variable mutation
+                if re.match(r"^global\s+\w+", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="INFO",
+                        category="ARCHITECTURE",
+                        issue_summary="Global state mutation (`global` keyword).",
+                        detailed_explanation="Mutating global state introduces hidden coupling between components and prevents thread-safe concurrent execution.",
+                        suggested_diff_fix=(
+                            f"-    {content}\n"
+                            f"+    # Pass state explicitly as parameter or encapsulate inside a class"
+                        )
+                    ))
+
+                # Check hardcoded localhost endpoint
+                if re.search(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?", content):
+                    findings.append(ReviewComment(
+                        file_path=file_diff.new_path,
+                        line_number=line_num,
+                        severity="INFO",
+                        category="ARCHITECTURE",
+                        issue_summary="Hardcoded local development URL (`localhost` / `127.0.0.1`).",
+                        detailed_explanation="Hardcoding development URLs breaks portability in containerized, staging, and production environments.",
+                        suggested_diff_fix=(
+                            f"-    {content}\n"
+                            f"+    SERVICE_URL = os.getenv(\"SERVICE_URL\", \"https://api.example.com\")"
                         )
                     ))
 

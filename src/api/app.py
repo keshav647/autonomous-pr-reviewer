@@ -62,7 +62,14 @@ try:
     @app.get("/", response_class=HTMLResponse)
     @app.get("/ui", response_class=HTMLResponse)
     def serve_dashboard():
-        return HTMLResponse(content=get_ui_html())
+        return HTMLResponse(
+            content=get_ui_html(),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
+        )
 
 except ImportError:
     app = None

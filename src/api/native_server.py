@@ -96,23 +96,23 @@ class NativeReviewHandler(BaseHTTPRequestHandler):
                 self._set_headers(500)
                 self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
 
-        elif self.path == "/api/v1/github/fetch":
+        elif self.path in ("/api/v1/github/fetch", "/api/v1/github/fetch-pr"):
             try:
                 res = handle_github_fetch(payload, req_headers)
                 self._set_headers(200)
                 self.wfile.write(json.dumps(res).encode("utf-8"))
             except Exception as e:
                 self._set_headers(400)
-                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+                self.wfile.write(json.dumps({"success": False, "error": str(e), "detail": str(e)}).encode("utf-8"))
 
-        elif self.path == "/api/v1/github/publish":
+        elif self.path in ("/api/v1/github/publish", "/api/v1/github/publish-review"):
             try:
                 res = handle_github_publish(payload, req_headers)
                 self._set_headers(200)
                 self.wfile.write(json.dumps(res).encode("utf-8"))
             except Exception as e:
                 self._set_headers(400)
-                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+                self.wfile.write(json.dumps({"success": False, "error": str(e), "detail": str(e)}).encode("utf-8"))
 
         else:
             self._set_headers(404)

@@ -7,9 +7,10 @@ from ...github.client import GitHubReviewClient
 def handle_github_fetch(data: Dict[str, Any], headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """Pure functional handler fetching unified diff and metadata from GitHub."""
     headers = headers or {}
-    repo_input = (data.get("repo") or data.get("pr_url") or data.get("url") or "").strip()
+    owner_input = (data.get("owner") or "").strip()
+    repo_input = (data.get("repo") or data.get("repo_input") or data.get("pr_url") or data.get("url") or "").strip()
     pull_number = int(data.get("pull_number", 0) or 0)
-    token = data.get("github_token") or headers.get("x-github-token") or None
+    token = data.get("github_token") or data.get("token") or headers.get("x-github-token") or None
 
     # Support parsing full GitHub PR URL: https://github.com/owner/repo/pull/123
     if "github.com/" in repo_input:
@@ -20,10 +21,20 @@ def handle_github_fetch(data: Dict[str, Any], headers: Optional[Dict[str, str]] 
             pull_number = int(m.group(3))
         else:
             raise ValueError("Invalid GitHub Pull Request URL. Expected format: https://github.com/owner/repo/pull/123")
+    elif owner_input and repo_input and "/" not in repo_input:
+        owner = owner_input
+        repo = repo_input
     elif "/" in repo_input:
         parts = repo_input.split("/")
         owner = parts[0].strip()
         repo = parts[1].strip()
+    elif owner_input and not repo_input:
+        if "/" in owner_input:
+            parts = owner_input.split("/")
+            owner = parts[0].strip()
+            repo = parts[1].strip()
+        else:
+            raise ValueError("Repository must be specified as 'owner/repo' or a direct GitHub PR URL.")
     else:
         raise ValueError("Repository must be specified as 'owner/repo' or a direct GitHub PR URL.")
 
@@ -53,10 +64,10 @@ def handle_github_publish(data: Dict[str, Any], headers: Optional[Dict[str, str]
     owner = data.get("owner", "demo")
     repo = data.get("repo", "repo")
     pull_number = int(data.get("pull_number", 1))
-    token = data.get("github_token") or headers.get("x-github-token") or None
+    token = data.get("github_token") or data.get("token") or headers.get("x-github-token") or None
     commit_id = data.get("commit_id")
     dry_run = bool(data.get("dry_run", not bool(token)))
-    review_data = data.get("review_result", {})
+    review_data = data.get("review_result") or data.get("review") or {}
 
     client = GitHubReviewClient(token=token)
     resp = client.post_pr_review(
@@ -81,22 +92,28 @@ try:
     router = APIRouter(prefix="/api/v1/github", tags=["GitHub"])
 
     class GitHubFetchPayload(BaseModel):
+        owner: Optional[str] = None
         repo: Optional[str] = ""
+        repo_input: Optional[str] = None
         pull_number: Optional[int] = 0
         pr_url: Optional[str] = None
         url: Optional[str] = None
+        token: Optional[str] = None
         github_token: Optional[str] = None
 
     class GitHubPublishPayload(BaseModel):
         owner: str = "demo"
         repo: str = "repo"
         pull_number: int = 1
-        review_result: Dict[str, Any]
+        review_result: Optional[Dict[str, Any]] = None
+        review: Optional[Dict[str, Any]] = None
+        token: Optional[str] = None
         github_token: Optional[str] = None
         commit_id: Optional[str] = None
         dry_run: Optional[bool] = False
 
     @router.post("/fetch")
+    @router.post("/fetch-pr")
     def fetch_pr(payload: GitHubFetchPayload, request: Request):
         try:
             return handle_github_fetch(payload.model_dump(), dict(request.headers))
@@ -104,6 +121,7 @@ try:
             raise HTTPException(status_code=400, detail=str(e))
 
     @router.post("/publish")
+    @router.post("/publish-review")
     def publish_review(payload: GitHubPublishPayload, request: Request):
         try:
             return handle_github_publish(payload.model_dump(), dict(request.headers))
