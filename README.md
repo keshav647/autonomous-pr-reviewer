@@ -8,9 +8,20 @@
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com)
   [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
   [![UI: SENTINEL Tactical HUD](https://img.shields.io/badge/UI-Three.js_%2B_GSAP_Tactical_HUD-f59e0b.svg)](#interactive-sentinel-command-console)
+  [![Loom Walkthrough](https://img.shields.io/badge/Loom_Walkthrough-1080p_HD-625DF5?style=for-the-badge&logo=loom&logoColor=white)](https://www.loom.com/share/de6eb4563a1d4dfb8a7a89b7b4fd3629)
+  [![Author](https://img.shields.io/badge/Author-Keshav_Budhiraja-0EA5E9?style=for-the-badge&logo=github)](https://github.com/keshav647)
 </div>
 
 **SENTINEL** is an autonomous, multi-agent code intelligence and security auditing platform that integrates directly with GitHub Pull Requests via REST API and Webhooks. Rather than issuing naive, single-shot LLM calls, SENTINEL coordinates a parallel squad of specialized domain agents (`BOT SEC-9`, `BOT PERF-X`, `BOT ARCH-V`, and `CONSENSUS CORE`) using a cyclical state graph to parse unified git diffs, extract Python AST scopes, audit multi-file repositories, and dispatch line-anchored Markdown review comments with ready-to-apply `git diff` remediation patches.
+
+---
+
+## 🎬 Architecture Tour & Live Video Walkthrough
+
+> **Watch the full 1080p architecture tour and live product demonstration on Loom:**  
+> [![Watch SENTINEL Architecture & Live Walkthrough on Loom](https://img.shields.io/badge/Watch_Full_Walkthrough-Loom_HD-625DF5?style=for-the-badge&logo=loom&logoColor=white)](https://www.loom.com/share/de6eb4563a1d4dfb8a7a89b7b4fd3629)  
+> *Direct Link:* [https://www.loom.com/share/de6eb4563a1d4dfb8a7a89b7b4fd3629](https://www.loom.com/share/de6eb4563a1d4dfb8a7a89b7b4fd3629)  
+> *For the step-by-step evaluation guide and local reviewer checklist, see [Technical Walkthrough & Evaluation Guide](docs/WALKTHROUGH.md).*
 
 ---
 
@@ -71,7 +82,7 @@ The web dashboard (`src/ui/index.html`) features a bespoke **Deep Charcoal & Tac
 
 * **[System Architecture & Data Contracts](docs/ARCHITECTURE.md):** StateGraph topology, AST context mapping, comprehensive CWE rule matrix, conflict resolution math, and UI architecture.
 * **[Performance & Cost Benchmarks](docs/BENCHMARKS.md):** Multi-model latency profiles, schema reliability rates, and enterprise ROI analysis.
-* **[Video Walkthrough & Demonstration Guide](docs/WALKTHROUGH.md):** 60-second Loom demonstration script and step-by-step live evaluation checklist.
+* **[Video Walkthrough & Technical Evaluation Guide](docs/WALKTHROUGH.md):** Full 1080p Loom demonstration link, architecture tour highlights, and step-by-step reviewer checklist.
 
 ---
 
@@ -143,13 +154,16 @@ curl -X POST http://localhost:8000/api/v1/review \
 
 ---
 
-## 60-Second Video Walkthrough Script (Loom)
+## Author & Maintainer
 
-* **[0:00 - 0:15] The Hook & Problem:**
-  > *"Every engineering team struggles with slow PR cycles and missed security flaws in code reviews. I built SENTINEL—an autonomous Multi-Agent PR Reviewer that audits multi-file code changes with specialized domain agents in under 15 seconds."*
-* **[0:15 - 0:35] Live Action Demo:**
-  > *(Show the SENTINEL Tactical Cockpit UI, select the 8-file `Testing SENTINEL` benchmark or import live GitHub PR `keshav647/testing #1`, and click `Dispatch Robot Audit`). Show the 3D Robot Sentinel scanning, the Critical Vulnerabilities Hotline Deck populating, and one-click line jumping to inline `git diff` fix suggestions.*
-* **[0:35 - 0:50] The Technical Architecture:**
-  > *(Switch to Agent Telemetry HUD and architecture diagram). "Under the hood, an Orchestrator extracts Python AST scopes and spawns three parallel specialist agents—Security (`BOT SEC-9`), Performance (`BOT PERF-X`), and Architecture (`BOT ARCH-V`). Findings are deduplicated by `CONSENSUS CORE` and strictly validated against Pydantic v2 schemas."*
-* **[0:50 - 1:00] Metrics & Close:**
-  > *"It cuts PR review turnaround by 75%, guarantees 100% schema validity across 19 automated tests, and includes a zero-cost deterministic AST fallback that runs in under 20ms."*
+**Keshav Budhiraja**
+* Systems & AI Engineer
+* **GitHub:** [@keshav647](https://github.com/keshav647)
+* **Portfolio:** [keshavbudhiraja.com](https://keshavbudhiraja.com)
+* **Email:** [keshavbudhiraja4321@gmail.com](mailto:keshavbudhiraja4321@gmail.com)
+
+---
+
+## License
+
+MIT © [Keshav Budhiraja](https://github.com/keshav647). All rights reserved.
