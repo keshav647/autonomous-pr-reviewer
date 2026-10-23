@@ -4,7 +4,7 @@
   # SENTINEL // Autonomous Multi-Agent Pull Request Reviewer & Security Auditor
 
   [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com)
   [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
   [![UI: SENTINEL Tactical HUD](https://img.shields.io/badge/UI-Three.js_%2B_GSAP_Tactical_HUD-f59e0b.svg)](#interactive-sentinel-command-console)
@@ -166,4 +166,6 @@ curl -X POST http://localhost:8000/api/v1/review \
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [Apache 2.0 License](LICENSE).
+
+Copyright (c) 2026 Keshav Budhiraja.
