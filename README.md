@@ -166,4 +166,4 @@ curl -X POST http://localhost:8000/api/v1/review \
 
 ## License
 
-MIT © [Keshav Budhiraja](https://github.com/keshav647). All rights reserved.
+This project is licensed under the [MIT License](LICENSE).
